@@ -315,3 +315,120 @@
   font-size: 10px;
   color: var(--grey);
 }
+
+/* ---------------------------------------------- lane feedback (STOPP 2) */
+.chip.front {
+  border-width: 3px;
+}
+.chip.resolved {
+  z-index: 2;
+  font-weight: bold;
+  animation: chip-pop 1400ms forwards;
+}
+.chip.resolved .chip-label {
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.chip.outcome-alone {
+  border-color: var(--green);
+  color: var(--green);
+}
+.chip.outcome-mercy,
+.chip.outcome-retro {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 12px var(--cyan);
+}
+.chip.outcome-expired {
+  border-color: var(--grey);
+  color: var(--grey);
+}
+.chip.outcome-dead {
+  border-color: var(--red);
+  color: var(--red);
+  background: rgba(255, 59, 59, 0.2);
+}
+@keyframes chip-pop {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1.15);
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0;
+  }
+}
+.lane-flash {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  letter-spacing: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms;
+}
+.lane-flash.show {
+  opacity: 1;
+}
+.lane-flash.effect-armed {
+  background: rgba(0, 229, 255, 0.35);
+  color: var(--cyan);
+}
+.lane-flash.effect-disarmed {
+  background: rgba(90, 92, 104, 0.5);
+  color: var(--text);
+}
+.lane-flash.effect-hardened {
+  background: rgba(255, 179, 0, 0.35);
+  color: var(--amber);
+}
+.lane-flash.effect-revived {
+  background: rgba(0, 229, 255, 0.6);
+  color: #fff;
+}
+
+/* ------------------------------------------------------------- intro */
+.intro {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11, 11, 14, 0.92);
+  padding: 20px;
+}
+.intro[hidden] {
+  display: none !important;
+}
+.intro-card {
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.intro-card h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 3px;
+  color: var(--cyan);
+}
+.intro-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.intro-card p b {
+  color: var(--cyan);
+}
+.btn.help {
+  flex: 0 0 44px;
+}

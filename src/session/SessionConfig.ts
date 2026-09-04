@@ -68,7 +68,7 @@ export const SessionConfig = {
 
   // ----------------------------------------------------------------- guest
   /** Base timing error sigma in ms at skill 0. GDD 3: sigma = f(1 - skill, frustration). Calibrated M1: 110 => passive loses 77 %, 120 => 85 %, 130 => 90 %. */
-  sigmaBaseMs: 120,
+  sigmaBaseMs: 100,
   /** Extra sigma factor per unit frustration (tilt spiral). Start value. */
   jitterGain: 1.5,
   /** Systematic bias in ms (positive = jumps late). Casual guests tend to jump late. Start value. */

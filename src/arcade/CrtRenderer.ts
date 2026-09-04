@@ -15,7 +15,13 @@ export interface CrtFrameOptions {
   freezeProgress?: number | undefined;
   /** Centered message (e.g. "PLAYER 1 READY"). */
   message?: string | undefined;
+  /** Per-hazard manipulation marks drawn above the obstacle (machine view, links chip and obstacle). */
+  marks?: ReadonlyMap<string, 'armed' | 'hardened'> | undefined;
+  /** The hazard whose chip is at the front of the lane; gets a white tick. */
+  nextHazardId?: string | undefined;
 }
+
+const MARK_COLOR = { armed: PALETTE.cyan, hardened: '#ffb300' } as const;
 
 export class CrtRenderer {
   private readonly logic: HTMLCanvasElement;
@@ -64,6 +70,19 @@ export class CrtRenderer {
         g.fillRect(sx, C.groundY - o.height, o.width, o.height);
         g.fillStyle = PALETTE.white;
         g.fillRect(sx + 1, C.groundY - o.height + 2, 2, 2); // eye
+      }
+      if (o.resolved) continue;
+      const markY = C.groundY - o.height - 8;
+      const mark = opts.marks?.get(o.id);
+      if (mark) {
+        g.fillStyle = MARK_COLOR[mark];
+        g.fillRect(sx, markY, o.width, 2);
+      }
+      if (opts.nextHazardId === o.id) {
+        g.fillStyle = PALETTE.white;
+        const cx = sx + Math.floor(o.width / 2);
+        g.fillRect(cx - 1, markY - 6, 3, 3);
+        g.fillRect(cx, markY - 3, 1, 2);
       }
     }
 

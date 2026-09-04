@@ -1,12 +1,23 @@
 // Chips bound to hazard ids; the only gesture zone. GDD 2.2, 4.1.
 // Pure view: reads HazardView[] + manipulation state each frame and moves DOM
 // chips with CSS transforms. Never mutates simulation state.
+//
+// Feedback added after the first device test (M1 STOPP 2): a resolved chip
+// stays in the contact zone for a moment and shows its outcome, and every
+// accepted operator action flashes over the lane.
 import type { HazardView } from '../arcade/FakeArcadeGame';
 import type { ManipulationLayer } from '../arcade/ManipulationLayer';
 import { de } from '../i18n/de';
 import { SessionConfig as C } from '../session/SessionConfig';
+import type { OperatorEffect } from '../session/events';
 
 const CHIP_GLYPH: Record<HazardView['type'], string> = { crater: '○', worm: '◆', probe: '▲', meteor: '●' };
+/** How long a resolved chip stays visible with its outcome. */
+const OUTCOME_MS = 1400;
+/** How long the action flash stays on the lane. */
+const FLASH_MS = 450;
+
+export type ChipOutcome = keyof typeof de.lane.outcome;
 
 export interface LaneFreeze {
   /** 0..1 elapsed share of the death freeze. */
@@ -17,8 +28,11 @@ export class HazardLane {
   readonly root: HTMLElement;
   private readonly track: HTMLElement;
   private readonly freezeBar: HTMLElement;
+  private readonly flash: HTMLElement;
   private chips = new Map<string, HTMLElement>();
+  private outcomes = new Map<string, { until: number }>();
   private ids: string[] = [];
+  private flashTimer = 0;
 
   constructor(container: HTMLElement) {
     this.root = container;
@@ -27,9 +41,11 @@ export class HazardLane {
       <div class="lane-contact"><span>${de.lane.contact}</span></div>
       <div class="lane-track"></div>
       <div class="lane-hints"><span>${de.lane.hintUp}</span><span>${de.lane.hintDown}</span></div>
+      <div class="lane-flash"></div>
       <div class="lane-freeze"><div class="lane-freeze-bar"></div><span>${de.lane.freeze}</span></div>`;
     this.track = this.root.querySelector<HTMLElement>('.lane-track')!;
     this.freezeBar = this.root.querySelector<HTMLElement>('.lane-freeze-bar')!;
+    this.flash = this.root.querySelector<HTMLElement>('.lane-flash')!;
   }
 
   /** Hazard ids currently displayed, front chip first. Used by keyboard input. */
@@ -37,18 +53,46 @@ export class HazardLane {
     return this.ids;
   }
 
+  /** A hazard was resolved: keep its chip in the contact zone and label it. */
+  showOutcome(hazardId: string, outcome: ChipOutcome): void {
+    const el = this.chips.get(hazardId);
+    if (!el) return;
+    // MercyApplied/MercyExpired arrive before HazardCleared; 'alone' must not overwrite them.
+    if (outcome === 'alone' && this.outcomes.has(hazardId)) return;
+    el.className = `chip chip-${el.dataset['type']} resolved outcome-${outcome}`;
+    el.style.transform = 'translate3d(0, 0, 0)';
+    el.querySelector('.chip-label')!.textContent = de.lane.outcome[outcome];
+    this.outcomes.set(hazardId, { until: performance.now() + OUTCOME_MS });
+  }
+
+  /** An operator action was accepted: flash the lane with its effect. */
+  showEffect(effect: OperatorEffect): void {
+    this.flash.textContent = de.lane.effect[effect];
+    this.flash.className = `lane-flash show effect-${effect}`;
+    window.clearTimeout(this.flashTimer);
+    this.flashTimer = window.setTimeout(() => this.flash.classList.remove('show'), FLASH_MS);
+  }
+
   update(hazards: readonly HazardView[], manip: ManipulationLayer, freeze: LaneFreeze | null): void {
     const width = this.track.clientWidth || 1;
+    const now = performance.now();
     const seen = new Set<string>();
     this.ids = hazards.map((h) => h.id);
 
     for (const h of hazards) {
       seen.add(h.id);
       let el = this.chips.get(h.id);
+      if (this.outcomes.has(h.id)) {
+        // Re-activated after a respawn: fresh chip.
+        el?.remove();
+        el = undefined;
+        this.outcomes.delete(h.id);
+      }
       if (!el) {
         el = document.createElement('div');
         el.className = `chip chip-${h.type}`;
         el.dataset['hazardId'] = h.id;
+        el.dataset['type'] = h.type;
         el.innerHTML = `<span class="chip-glyph">${CHIP_GLYPH[h.type]}</span><span class="chip-label">${de.lane.chip[h.type]}</span>`;
         this.track.appendChild(el);
         this.chips.set(h.id, el);
@@ -59,12 +103,15 @@ export class HazardLane {
       el.classList.toggle('armed', manip.isArmed(h.id));
       el.classList.toggle('hardened', manip.isHardened(h.id));
       el.classList.toggle('in-contact', h.framesUntilCritical <= 0);
+      el.classList.toggle('front', h === hazards[0]);
     }
     for (const [id, el] of this.chips) {
-      if (!seen.has(id)) {
-        el.remove();
-        this.chips.delete(id);
-      }
+      if (seen.has(id)) continue;
+      const outcome = this.outcomes.get(id);
+      if (outcome && outcome.until > now) continue;
+      el.remove();
+      this.chips.delete(id);
+      this.outcomes.delete(id);
     }
 
     this.root.classList.toggle('frozen', freeze !== null);

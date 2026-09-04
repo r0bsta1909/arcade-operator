@@ -18,6 +18,9 @@ export class Dashboard {
   readonly crtHint: HTMLElement;
   readonly lane: HazardLane;
   readonly feedbackButton: HTMLButtonElement;
+  readonly helpButton: HTMLButtonElement;
+  readonly intro: HTMLElement;
+  readonly introStart: HTMLButtonElement;
   private readonly meters: FlowMeters;
   private readonly tolerance: ToleranceBar;
   private readonly jitter: JitterBar;
@@ -27,6 +30,7 @@ export class Dashboard {
   constructor(parent: HTMLElement) {
     this.root = document.createElement('div');
     this.root.className = 'screen game';
+    this.root.style.position = 'relative';
     this.root.innerHTML = `
       <div class="crt-wrap">
         <canvas class="crt"></canvas>
@@ -45,7 +49,9 @@ export class Dashboard {
       <div class="footer">
         <button class="btn" disabled>◎ ${de.dashboard.coin}</button>
         <button class="btn feedback">✎ ${de.dashboard.feedback}</button>
-      </div>`;
+        <button class="btn help">${de.intro.help}</button>
+      </div>
+      <div class="intro" hidden><div class="intro-card"><h2>${de.intro.title}</h2>${de.intro.lines.map((l) => `<p>${l}</p>`).join('')}<button class="btn primary intro-start">${de.intro.start}</button></div></div>`;
     parent.appendChild(this.root);
     this.crtWrap = this.q('.crt-wrap');
     this.crtCanvas = this.q('canvas.crt');
@@ -58,6 +64,9 @@ export class Dashboard {
     this.heatFill = this.q('.heat-fill');
     this.heatValue = this.q('.heat-value');
     this.feedbackButton = this.q('button.feedback');
+    this.helpButton = this.q('button.help');
+    this.intro = this.q('.intro');
+    this.introStart = this.q('button.intro-start');
   }
 
   update(hazards: readonly HazardView[], manip: ManipulationLayer, freeze: LaneFreeze | null, psyche: PsycheState, heat: number): void {

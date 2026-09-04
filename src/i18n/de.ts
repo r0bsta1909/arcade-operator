@@ -6,6 +6,20 @@ export const de = {
     hintDown: '↓ Veto',
     freeze: 'VETO!',
     chip: { crater: 'Krater', worm: 'Wurm', probe: 'Sonde', meteor: 'Meteorit' },
+    /** Shown on a chip once its hazard is resolved. */
+    outcome: { alone: 'ALLEIN GESCHAFFT', mercy: 'GNADE GRIFF', expired: 'GNADE VERFALLEN', dead: 'TOT', retro: 'ZURÜCKGEHOLT' },
+    /** Flashed over the lane when an operator action is accepted. */
+    effect: { armed: 'GNADE GESCHARFT', disarmed: 'GNADE AUFGEHOBEN', hardened: 'VERHÄRTET', revived: 'TOD ZURÜCKGENOMMEN' },
+  },
+  intro: {
+    title: 'DU BIST DER AUTOMAT',
+    lines: [
+      'Der Gast spielt selbst und macht Fehler. Jeder Chip auf der Lane ist ein Hindernis, das gleich kommt.',
+      'Wisch auf dem Chip nach oben, bevor er die rote Zone erreicht: Dann fängt die Maschine einen verpassten Sprung heimlich auf.',
+      'Stirbt er doch, pulsiert die Lane 400 ms rot. Wisch nach oben nimmt den Tod zurück. Wisch nach unten macht es schwerer, falls er sich langweilt.',
+    ],
+    start: 'Münze rein',
+    help: '?',
   },
   crt: {
     booting: 'Automat fährt hoch…',

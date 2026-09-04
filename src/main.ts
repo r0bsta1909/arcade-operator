@@ -75,9 +75,13 @@ const loop = new GameLoop({
     const snap = runner.game.snapshot();
     const frozen = runner.states.inDeathFreeze;
     const freezeProgress = frozen ? runner.states.framesIn(runner.frame) / DEATH_FREEZE_FRAMES : undefined;
-    crt.render(snap, { freezeProgress, message: crtMessage() });
+    const marks = new Map<string, 'armed' | 'hardened'>();
+    for (const id of runner.manip.state.armed) marks.set(id, 'armed');
+    for (const id of runner.manip.state.hardened) marks.set(id, 'hardened');
+    const upcoming = runner.game.getUpcomingHazards(3);
+    crt.render(snap, { freezeProgress, message: crtMessage(), marks, nextHazardId: upcoming[0]?.id });
     overlay.render(snap, runner.prediction());
-    dashboard.update(runner.game.getUpcomingHazards(3), runner.manip, frozen && freezeProgress !== undefined ? { progress: freezeProgress } : null, runner.psyche.state, runner.heat.value);
+    dashboard.update(upcoming, runner.manip, frozen && freezeProgress !== undefined ? { progress: freezeProgress } : null, runner.psyche.state, runner.heat.value);
 
     if (runner.ended && runner.result && ++endScreenFrames >= END_SCREEN_FRAMES) {
       // Hold the end screen for a moment, then debrief.
@@ -96,13 +100,50 @@ function startSession(): void {
   runner = new SessionRunner({ seed: newSeed(), buildHash: BUILD_HASH });
   actions = new OperatorActions();
   probe = new LatencyProbe(runner.bus);
+  wireLaneFeedback();
   input = new OperatorInput(dashboard.lane.root, actions, probe, {
     chipIds: () => dashboard.lane.chipIds(),
     inDeathFreeze: () => runner.states.inDeathFreeze,
   });
   fitCanvases();
-  loop.start();
+  if (introSeen()) loop.start();
+  else showIntro();
 }
+
+/** Lane feedback (STOPP 2): chip outcomes and accepted-action flashes, straight from the bus. */
+function wireLaneFeedback(): void {
+  const lane = dashboard.lane;
+  const bus = runner.bus;
+  bus.on('MercyApplied', (e) => lane.showOutcome(e.hazardId, 'mercy'));
+  bus.on('MercyExpired', (e) => lane.showOutcome(e.hazardId, 'expired'));
+  bus.on('HazardCleared', (e) => lane.showOutcome(e.hazardId, 'alone'));
+  bus.on('Death', (e) => lane.showOutcome(e.hazardId, 'dead'));
+  bus.on('RetroMercy', (e) => lane.showOutcome(e.hazardId, 'retro'));
+  bus.on('OperatorAction', (e) => lane.showEffect(e.effect));
+}
+
+const INTRO_KEY = 'operator.introSeen';
+function introSeen(): boolean {
+  try {
+    return localStorage.getItem(INTRO_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+function showIntro(): void {
+  loop.stop();
+  dashboard.intro.hidden = false;
+}
+dashboard.introStart.addEventListener('click', () => {
+  dashboard.intro.hidden = true;
+  try {
+    localStorage.setItem(INTRO_KEY, '1');
+  } catch {
+    /* private mode: intro shows again next time */
+  }
+  loop.start();
+});
+dashboard.helpButton.addEventListener('click', () => showIntro());
 
 function openFeedback(): void {
   // M1 step 7 replaces this with FeedbackDialog.
