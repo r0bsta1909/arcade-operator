@@ -67,14 +67,17 @@ export const SessionConfig = {
   heatDecayPerSec: 8,
 
   // ----------------------------------------------------------------- guest
-  /** Base timing error sigma in ms at skill 0. GDD 3: sigma = f(1 - skill, frustration). Start value. */
-  sigmaBaseMs: 110,
+  /** Base timing error sigma in ms at skill 0. GDD 3: sigma = f(1 - skill, frustration). Calibrated M1: 110 => passive loses 77 %, 120 => 85 %, 130 => 90 %. */
+  sigmaBaseMs: 120,
   /** Extra sigma factor per unit frustration (tilt spiral). Start value. */
   jitterGain: 1.5,
   /** Systematic bias in ms (positive = jumps late). Casual guests tend to jump late. Start value. */
   biasMs: 12,
-  /** GDD 3: skill += learnRate * 0.02 per segment. */
+  /** GDD 3: skill += learnRate * 0.02 per segment. learnRate: niedrig 0.5, mittel 1, hoch 1.5, sehr hoch 2. */
   skillPerSegment: 0.02,
+  skillMax: 0.95,
+  /** Dashboard JITTER bar is full at this sigma (ms). GDD 2.3. */
+  jitterFullScaleMs: 200,
   /** Frames of lookahead the guest uses to commit to a jump decision. */
   guestReactionFrames: 20,
 
@@ -96,8 +99,9 @@ export const SessionConfig = {
     deathNearHighscore: { frust: 0.3, bored: -0.05 },
     /** Highscore proximity that counts as "almost made it". GDD 2.3: >= 90 %. */
     nearHighscoreRatio: 0.9,
-    /** Serial deaths: n-th death within the window is multiplied by n^2 / 4 (3rd death in 20 s => +0.45 base). */
+    /** Serial deaths: n-th death within the window is multiplied by 1 + (n-1)^2 * gain (3rd death in 20 s => 0.18 * 2.5 = +0.45). */
     serialDeathWindowMs: 20000,
+    serialDeathQuadGain: 0.375,
     nearMiss: { frust: 0.08, bored: -0.12, reliefFrust: -0.15, reliefMs: 3000 },
     mercyNoticed: { frust: 0.1, bored: 0.05 },
     /** Boredom per safe jump once the streak reaches the threshold. */

@@ -10,50 +10,50 @@ Arbeite die Schritte in dieser Reihenfolge ab. Hake sie hier ab. Halte an jedem 
 
 ## Schritt 0 — Umgebung prüfen
 
-- [ ] `bun --version`, `gh auth status`, `git config user.name`. Fehlt etwas → **STOPP**, Rob bitten, `gh auth login` auszuführen bzw. Bun zu installieren.
-- [ ] Lies `GDD.md` vollständig. Lies `CLAUDE.md`. Fasse in fünf Sätzen zusammen, was in M1 *nicht* gebaut wird (Verdacht, Overheat, Hitbox-Shrink, Bullet-Time, Slider, Profile außer Casual, Sonden, Meteoriten, CRT-Shader, Audio). Diese Liste ist deine Scope-Bremse.
+- [x] `bun --version`, `gh auth status`, `git config user.name`. Fehlt etwas → **STOPP**, Rob bitten, `gh auth login` auszuführen bzw. Bun zu installieren.
+- [x] Lies `GDD.md` vollständig. Lies `CLAUDE.md`. Fasse in fünf Sätzen zusammen, was in M1 *nicht* gebaut wird (Verdacht, Overheat, Hitbox-Shrink, Bullet-Time, Slider, Profile außer Casual, Sonden, Meteoriten, CRT-Shader, Audio). Diese Liste ist deine Scope-Bremse.
 
 ## Schritt 1 — Repo-Skelett
 
-- [ ] `gh repo create operator --public --description "Asymmetric arcade-operator game. You are the machine." --license` — CC BY-NC ist bei `gh` nicht als Template verfügbar: Repo ohne Lizenz anlegen, `LICENSE` manuell mit dem offiziellen CC-BY-NC-4.0-Text anlegen (Quelle: creativecommons.org/licenses/by-nc/4.0/legalcode.txt — herunterladen, nicht aus dem Gedächtnis schreiben).
-- [ ] `README.md`: Ein Absatz Vision (aus GDD 1), Link zum Spiel (Platzhalter bis Schritt 9), Lizenzhinweis, "How to run locally", "How to give feedback".
-- [ ] `bun init`, Vite + TypeScript strict, `vitest`, `eslint` mit `no-restricted-globals` für `Math.random` / `Date.now` / `performance.now` in `src/arcade`, `src/human`, `src/session`.
-- [ ] Ordnerstruktur aus GDD 5.2 als leere Dateien mit je einem Kopfkommentar (Zweck, GDD-Verweis).
-- [ ] `.github/workflows/ci.yml`: `bun install`, `bun run typecheck`, `bun run test`, `bun run build`.
-- [ ] `.github/ISSUE_TEMPLATE/feedback.yml` mit denselben Feldern wie der spätere Button (Kategorie-Dropdown, Freitext, Gerät, optional Log).
-- [ ] Labels anlegen: `feedback`, `cat:bug`, `cat:feel`, `cat:balance`, `cat:idea`, `cat:other`, `phase:m1`, `phase:m2`, `phase:m3`, `phase:m4`.
-- [ ] Erster Commit: `infra: repo skeleton, CI, license`.
+- [x] (Repo heißt `r0bsta1909/arcade-operator`, von Rob leer angelegt; Lizenz per curl geladen) `gh repo create operator --public --description "Asymmetric arcade-operator game. You are the machine." --license` — CC BY-NC ist bei `gh` nicht als Template verfügbar: Repo ohne Lizenz anlegen, `LICENSE` manuell mit dem offiziellen CC-BY-NC-4.0-Text anlegen (Quelle: creativecommons.org/licenses/by-nc/4.0/legalcode.txt — herunterladen, nicht aus dem Gedächtnis schreiben).
+- [x] `README.md`: Ein Absatz Vision (aus GDD 1), Link zum Spiel (Platzhalter bis Schritt 9), Lizenzhinweis, "How to run locally", "How to give feedback".
+- [x] `bun init`, Vite + TypeScript strict, `vitest`, `eslint` mit `no-restricted-globals` für `Math.random` / `Date.now` / `performance.now` in `src/arcade`, `src/human`, `src/session`.
+- [x] Ordnerstruktur aus GDD 5.2 als leere Dateien mit je einem Kopfkommentar (Zweck, GDD-Verweis).
+- [x] `.github/workflows/ci.yml`: `bun install`, `bun run typecheck`, `bun run test`, `bun run build`.
+- [x] `.github/ISSUE_TEMPLATE/feedback.yml` mit denselben Feldern wie der spätere Button (Kategorie-Dropdown, Freitext, Gerät, optional Log).
+- [x] Labels anlegen: `feedback`, `cat:bug`, `cat:feel`, `cat:balance`, `cat:idea`, `cat:other`, `phase:m1`, `phase:m2`, `phase:m3`, `phase:m4`.
+- [x] Erster Commit: `infra: repo skeleton, CI, license`.
 
 ## Schritt 2 — Core
 
-- [ ] `core/Rng.ts` — `mulberry32`, `fork(label)` für getrennte Streams (Welt, Gast, Gast-Vorhersage).
-- [ ] `core/GameLoop.ts` — Fixed 60 Hz mit Akkumulator, Spiral-of-Death-Schutz (max 5 Ticks/Frame), `onTick`, `onRender(alpha)`. `Clock.timeScale` skaliert den Akkumulator, nicht die Frame-Rate.
-- [ ] `core/Store.ts` — `Store<T>` mit `get`, `set`, `update`, `subscribe`. Keine Abhängigkeit.
-- [ ] `core/EventBus.ts` — typisiert über ein `GameEvent`-Union aus `session/events.ts`.
-- [ ] `session/SessionLog.ts` — `append(frame, event)`, `toJSON()`, `fromJSON()`, `hash()`. Enthält Header: `seed`, `profileId`, `buildHash`, `configHash`.
-- [ ] `session/SessionConfig.ts` — alle Konstanten aus GDD 2.1, 2.3 (nur die M1-relevanten), jede mit Kommentar `// GDD 2.3: …`.
-- [ ] `tests/determinism.test.ts` — zwei Läufe mit gleichem Seed und gleichem Operator-Input-Skript (Array aus `{frame, action}`) ⇒ identischer `SessionLog.hash()`. Der Test läuft jetzt schon gegen einen Dummy-Tick und wird in Schritt 4 auf die echte Simulation umgestellt.
-- [ ] Commit: `feat(core): loop, rng, store, eventbus, session log`.
+- [x] `core/Rng.ts` — `mulberry32`, `fork(label)` für getrennte Streams (Welt, Gast, Gast-Vorhersage).
+- [x] `core/GameLoop.ts` — Fixed 60 Hz mit Akkumulator, Spiral-of-Death-Schutz (max 5 Ticks/Frame), `onTick`, `onRender(alpha)`. `Clock.timeScale` skaliert den Akkumulator, nicht die Frame-Rate.
+- [x] `core/Store.ts` — `Store<T>` mit `get`, `set`, `update`, `subscribe`. Keine Abhängigkeit.
+- [x] `core/EventBus.ts` — typisiert über ein `GameEvent`-Union aus `session/events.ts`.
+- [x] `session/SessionLog.ts` — `append(frame, event)`, `toJSON()`, `fromJSON()`, `hash()`. Enthält Header: `seed`, `profileId`, `buildHash`, `configHash`.
+- [x] `session/SessionConfig.ts` — alle Konstanten aus GDD 2.1, 2.3 (nur die M1-relevanten), jede mit Kommentar `// GDD 2.3: …`.
+- [x] `tests/determinism.test.ts` — zwei Läufe mit gleichem Seed und gleichem Operator-Input-Skript (Array aus `{frame, action}`) ⇒ identischer `SessionLog.hash()`. Der Test läuft jetzt schon gegen einen Dummy-Tick und wird in Schritt 4 auf die echte Simulation umgestellt.
+- [x] Commit: `feat(core): loop, rng, store, eventbus, session log`.
 
 ## Schritt 3 — Fake-Game
 
-- [ ] `arcade/Segments.ts` — zwei handgebaute Segmente à 20 s, nur Krater und Würmer, als Datenarrays (`{ atMeter, type, width }`).
-- [ ] `arcade/Hopper.ts` — feste Sprunghöhe, Sprungdauer 36 Frames, `coyoteFrames` als Eingang aus `ManipulationState`.
-- [ ] `arcade/FakeArcadeGame.ts` — Scrolling, Kollision (AABB), Score, drei Leben, `getUpcomingHazards(3)` mit `framesUntilCritical` und `idealJumpFrame`. Emittiert `Death`, `NearMiss(deltaMs)`, `SegmentCleared`, `ScoreMilestone`. Sieg bei 3.000.
-- [ ] `arcade/ManipulationLayer.ts` — `ManipulationState` mit `armed: Set<hazardId>`, `hardened: Set<hazardId>`, `retroMercyRequested: boolean`. Gnade greift nur, wenn `armed` und der Sprung sonst tödlich wäre; loggt `MercyApplied(hazardId, deltaMs)` oder `MercyExpired`.
-- [ ] `arcade/CrtRenderer.ts` — 160×144 Logikpixel auf Canvas, Rechtecke in 4 Farben, `imageSmoothingEnabled = false`. Keine Scanlines, keine Wölbung in M1.
-- [ ] `arcade/OverlayRenderer.ts` — zweites Canvas über dem CRT, zeichnet 300 ms vor dem kritischen Frame die Geist-Sprungkurve aus `HumanAgent.predictedJump` mit farbigem Landemarker.
-- [ ] Commit: `feat(arcade): moon hopper core, manipulation layer, crt + overlay renderers`.
+- [x] `arcade/Segments.ts` — zwei handgebaute Segmente à 20 s, nur Krater und Würmer, als Datenarrays (`{ atMeter, type, width }`).
+- [x] `arcade/Hopper.ts` — feste Sprunghöhe, Sprungdauer 36 Frames, `coyoteFrames` als Eingang aus `ManipulationState`.
+- [x] `arcade/FakeArcadeGame.ts` — Scrolling, Kollision (AABB), Score, drei Leben, `getUpcomingHazards(3)` mit `framesUntilCritical` und `idealJumpFrame`. Emittiert `Death`, `NearMiss(deltaMs)`, `SegmentCleared`, `ScoreMilestone`. Sieg bei 3.000.
+- [x] `arcade/ManipulationLayer.ts` — `ManipulationState` mit `armed: Set<hazardId>`, `hardened: Set<hazardId>`, `retroMercyRequested: boolean`. Gnade greift nur, wenn `armed` und der Sprung sonst tödlich wäre; loggt `MercyApplied(hazardId, deltaMs)` oder `MercyExpired`.
+- [x] `arcade/CrtRenderer.ts` — 160×144 Logikpixel auf Canvas, Rechtecke in 4 Farben, `imageSmoothingEnabled = false`. Keine Scanlines, keine Wölbung in M1.
+- [x] `arcade/OverlayRenderer.ts` — zweites Canvas über dem CRT, zeichnet 300 ms vor dem kritischen Frame die Geist-Sprungkurve aus `HumanAgent.predictedJump` mit farbigem Landemarker.
+- [x] Commit: `feat(arcade): moon hopper core, manipulation layer, crt + overlay renderers`.
 
 ## Schritt 4 — Gast
 
-- [ ] `human/Profiles.ts` — nur `casual` aktiv, Struktur für alle vier.
-- [ ] `human/HumanAgent.ts` — ideale Sprungframe-Berechnung, Fehler `N(bias, σ)`, `σ = σBase × (1 − skill) × (1 + frustration × jitterGain)`. `predictedJump(hazard)` mit eigenem PRNG-Fork. Kein Zugriff auf Manipulation.
-- [ ] `human/HumanPsychologyEngine.ts` — `frustration`, `boredom` als Leaky-Integratoren, `tolerance`, fixer Kanal (0,45 / 0,45), `jitter`. Events aus GDD 2.3 (M1-Teilmenge: Tod, Beinahe-Tod, Streak, Segment, Meilenstein). Abbruch-Entscheidung liefert `ABORT_FRUST` oder `ABORT_BORED` je nach dominanter Achse.
-- [ ] `session/GameStateManager.ts` — Zustandsautomat inkl. `DEATH_FREEZE` (400 ms, aus `SessionConfig.deathFreezeMs`).
-- [ ] `tests/determinism.test.ts` auf die echte Simulation umstellen. `tests/psychology.test.ts` mit drei Fällen: Serientod-Quadratik, Streak-Langeweile, Beinahe-Tod-Erleichterung.
-- [ ] Headless-Smoke: `bun run sim:smoke` spielt 50 Sessions mit Passiv-Bot. Erwartung: Passiv verliert ≥ 80 %. Sonst Konstanten anpassen, Ergebnis im Commit-Body.
-- [ ] Commit: `feat(human): agent, psychology engine, state machine`.
+- [x] `human/Profiles.ts` — nur `casual` aktiv, Struktur für alle vier.
+- [x] `human/HumanAgent.ts` — ideale Sprungframe-Berechnung, Fehler `N(bias, σ)`, `σ = σBase × (1 − skill) × (1 + frustration × jitterGain)`. `predictedJump(hazard)` mit eigenem PRNG-Fork. Kein Zugriff auf Manipulation.
+- [x] `human/HumanPsychologyEngine.ts` — `frustration`, `boredom` als Leaky-Integratoren, `tolerance`, fixer Kanal (0,45 / 0,45), `jitter`. Events aus GDD 2.3 (M1-Teilmenge: Tod, Beinahe-Tod, Streak, Segment, Meilenstein). Abbruch-Entscheidung liefert `ABORT_FRUST` oder `ABORT_BORED` je nach dominanter Achse.
+- [x] `session/GameStateManager.ts` — Zustandsautomat inkl. `DEATH_FREEZE` (400 ms, aus `SessionConfig.deathFreezeMs`).
+- [x] `tests/determinism.test.ts` auf die echte Simulation umstellen. `tests/psychology.test.ts` mit drei Fällen: Serientod-Quadratik, Streak-Langeweile, Beinahe-Tod-Erleichterung.
+- [x] Headless-Smoke: `bun run sim:smoke` spielt 50 Sessions mit Passiv-Bot. Erwartung: Passiv verliert ≥ 80 %. Sonst Konstanten anpassen, Ergebnis im Commit-Body.
+- [x] Commit: `feat(human): agent, psychology engine, state machine`.
 
 **STOPP 1 — Headless-Review.** Zeige Rob die Sim-Tabelle (Siegrate Passiv, mittlere Session-Dauer, Verteilung Frust- vs. Langeweile-Abbruch) und die Ereignisliste einer Beispiel-Session. Warte auf Freigabe der Konstanten.
 

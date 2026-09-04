@@ -113,15 +113,23 @@ export class FakeArcadeGame {
     this.updateScore();
   }
 
+  /**
+   * The guest pressed the button. A press while airborne is ignored (nothing to
+   * log, the guest keeps pressing). A press while grounded or falling is the
+   * guest's timing decision and is logged as Jump even if the hopper is already
+   * past coyote time and cannot take off any more.
+   */
   private handleJump(): void {
+    if (this.hopper.mode === 'airborne') return;
     const falling = this.hopper.mode === 'falling' ? this.craterUnder(this.distance) : null;
     const coyote = falling ? this.manip.slackFor(falling.id).coyoteFrames : 0;
-    if (!this.hopper.tryJump(coyote)) return;
     const target = this.currentTarget();
-    if (!target) return;
-    this.lastJump = { hazardId: target.id, front: this.distance };
-    const range = this.rangeFor(target, this.manip.baseSlack());
-    this.bus.emit({ type: 'Jump', hazardId: target.id, deltaMs: range ? deltaMs(this.distance, range, this.speed) : 0 });
+    if (target && this.lastJump?.hazardId !== target.id) {
+      this.lastJump = { hazardId: target.id, front: this.distance };
+      const range = this.rangeFor(target, this.manip.baseSlack());
+      this.bus.emit({ type: 'Jump', hazardId: target.id, deltaMs: range ? deltaMs(this.distance, range, this.speed) : 0 });
+    }
+    this.hopper.tryJump(coyote);
   }
 
   private die(o: Obstacle): void {

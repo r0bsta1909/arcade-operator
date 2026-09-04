@@ -134,6 +134,7 @@ Endgame (≥ 90 % Highscore): Verdachts-Empfindlichkeit +30 %, weil der Gast kon
 - **Death-Freeze:** Jeder Tod friert den CRT 400 ms ein (Rolling-Bar-Störung). Das ist zugleich das Rückwirk-Fenster.
 - **Sieg:** Highscore überschritten → "NEW HIGH SCORE — ENTER YOUR INITIALS". Der Gast tippt animiert drei Buchstaben (mit einem korrigierten Tippfehler). Mikrofon: *"JAAAA!"*. Dann Debrief.
 - **Niederlagen:** Frust-Abbruch (Toleranz 0, frustration dominant): Faustschlag, CRT wackelt, "PLAYER 1 LEFT". Langeweile-Abbruch (boredom dominant): Schritte entfernen sich, Attract-Mode, "INSERT COIN". Verdachts-Abbruch (Verdacht 100): Klopfen, "THIS THING IS RIGGED", Münzrückgabe.
+- **Letztes Leben ohne Free Credit:** Nach dem dritten Tod läuft "CONTINUE? 9…8…" (9 s). Greift kein Free Credit (M2), geht der Gast. Die Abbruchart richtet sich nach der Achse, die ihre Schwelle stärker überschreitet; im Log steht `cause: "lives"` statt `"tolerance"`, damit Debrief und Digest beide Wege unterscheiden können. (Ergänzt in M1 Schritt 4: Das Modell in 2.1 kannte nur Toleranz 0 als Niederlage, aber ohne Continue endet das Fake-Game physisch.)
 
 ### 2.6 Debrief-Screen
 
