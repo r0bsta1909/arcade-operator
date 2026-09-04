@@ -1,0 +1,30 @@
+{
+  "name": "arcade-operator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Asymmetric arcade-operator game. You are the machine.",
+  "license": "CC-BY-NC-4.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "bun scripts/build.ts",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src server scripts tests",
+    "test": "vitest run",
+    "sim": "bun tests/balance.sim.ts",
+    "sim:smoke": "bun tests/balance.sim.ts --smoke",
+    "feedback:digest": "bun scripts/feedback-digest.ts",
+    "replay": "bun scripts/replay.ts",
+    "serve": "bun server/index.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.30.0",
+    "@types/bun": "^1.2.0",
+    "eslint": "^9.30.0",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.35.0",
+    "vite": "^7.0.0",
+    "vitest": "^3.2.0"
+  }
+}

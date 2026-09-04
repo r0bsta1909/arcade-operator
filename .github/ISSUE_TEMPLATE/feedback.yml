@@ -1,0 +1,40 @@
+name: Feedback
+description: Manuelles Tester-Feedback (gleiche Felder wie der Feedback-Button im Spiel)
+title: "[feedback][<kategorie>] "
+labels: ["feedback"]
+body:
+  - type: dropdown
+    id: category
+    attributes:
+      label: Kategorie
+      options:
+        - bug
+        - feel
+        - balance
+        - idea
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: text
+    attributes:
+      label: Was ist passiert / wie hat es sich angefühlt?
+      placeholder: Mindestens 10 Zeichen, maximal 2000.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Gerät
+      placeholder: z. B. Pixel 7, Chrome 130, Portrait
+  - type: input
+    id: build
+    attributes:
+      label: Build-Hash
+      description: Steht unten im Debrief. Ohne Hash ist das Issue nicht reproduzierbar.
+  - type: textarea
+    id: log
+    attributes:
+      label: SessionLog (optional)
+      description: JSON aus dem Debrief ("Log kopieren").
+      render: json

@@ -1,0 +1,6 @@
+[install]
+exact = false
+
+[test]
+# Unit tests run through vitest (`bun run test`); `bun test` is not used.
+root = "tests"
