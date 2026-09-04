@@ -1,11 +1,11 @@
-// Simulated guest: ideal jump frame + N(bias, sigma) error; predictedJump on own PRNG stream. GDD 3, 5.3.
+// Simulated guest: ideal jump frame + N(bias, sigma) error; jumpRisk() for the overlay. GDD 3, 5.3.
 // Pure function of what the guest can see (upcoming hazards, own sprite state)
 // and feel (frustration, skill). Never imports ManipulationLayer or the overlay.
 import { MS_PER_FRAME } from '../core/Clock';
 import type { Rng } from '../core/Rng';
 import type { HazardView, HumanInput } from '../arcade/FakeArcadeGame';
 import type { HopperMode } from '../arcade/Hopper';
-import { msToPx, marginMs, outsideMs } from '../arcade/Physics';
+import { msToPx } from '../arcade/Physics';
 import type { JumpPrediction } from '../arcade/OverlayRenderer';
 import { SessionConfig as C } from '../session/SessionConfig';
 import { timingSigmaMs } from './HumanPsychologyEngine';
@@ -33,11 +33,9 @@ interface JumpPlan {
 
 export class HumanAgent {
   private plans = new Map<string, JumpPlan>();
-  private predictions = new Map<string, { idealJumpFrame: number; prediction: JumpPrediction }>();
 
   constructor(
     private readonly rng: Rng,
-    private readonly predictRng: Rng,
     readonly profile: Profile,
   ) {}
 
@@ -71,30 +69,32 @@ export class HumanAgent {
   }
 
   /**
-   * Machine-view estimate for the overlay: same error model, separate PRNG
-   * stream, so the ghost is a guess about the guest, not the truth. Stable per
-   * hazard until the hazard's ideal frame changes.
+   * Machine-view risk estimate for the overlay (GDD 2.2, amended after
+   * STOPP 2): no random sample, but the guest's error distribution against
+   * the safe take-off range. Deterministic, never contradicts the outcome.
    */
-  predictedJump(hazard: HazardView, feel: GuestFeel): JumpPrediction {
-    const cached = this.predictions.get(hazard.id);
-    if (cached && Math.abs(cached.idealJumpFrame - hazard.idealJumpFrame) <= 2) return cached.prediction;
-    const errorMs = this.predictRng.gaussian(C.biasMs, this.sigmaMs(feel));
-    const takeoffX = hazard.idealX + msToPx(errorMs, C.scrollPxPerFrame);
-    const outside = outsideMs(takeoffX, hazard.baseRange, C.scrollPxPerFrame);
-    const margin = marginMs(takeoffX, hazard.baseRange, C.scrollPxPerFrame);
-    const prediction: JumpPrediction = {
-      hazardId: hazard.id,
-      takeoffX,
-      outcome: outside !== 0 ? 'dead' : margin < C.nearMissMs ? 'close' : 'safe',
-    };
-    this.predictions.set(hazard.id, { idealJumpFrame: hazard.idealJumpFrame, prediction });
-    return prediction;
+  jumpRisk(hazard: HazardView, feel: GuestFeel): JumpPrediction {
+    const speed = C.scrollPxPerFrame;
+    const sigmaPx = msToPx(this.sigmaMs(feel), speed);
+    const expectedX = hazard.idealX + msToPx(C.biasMs, speed);
+    const { min, max } = hazard.baseRange;
+    const pInside = normalCdf((max - expectedX) / sigmaPx) - normalCdf((min - expectedX) / sigmaPx);
+    const deathProbability = Math.min(1, Math.max(0, 1 - pInside));
+    const outcome = deathProbability >= C.overlayRiskDead ? 'dead' : deathProbability >= C.overlayRiskClose ? 'close' : 'safe';
+    return { hazardId: hazard.id, expectedX, sigmaPx, safeMin: min, safeMax: max, deathProbability, outcome };
   }
 
   private forgetStale(hazards: readonly HazardView[]): void {
-    if (this.plans.size < 8 && this.predictions.size < 8) return;
+    if (this.plans.size < 8) return;
     const live = new Set(hazards.map((h) => h.id));
     for (const id of this.plans.keys()) if (!live.has(id)) this.plans.delete(id);
-    for (const id of this.predictions.keys()) if (!live.has(id)) this.predictions.delete(id);
   }
+}
+
+/** Standard normal CDF (Abramowitz-Stegun 7.1.26), max error 1.5e-7. */
+export function normalCdf(z: number): number {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp((-z * z) / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z >= 0 ? 1 - p : p;
 }

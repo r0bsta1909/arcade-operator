@@ -8,6 +8,7 @@ import { slackForWindow, takeoffRange } from '../src/arcade/Physics';
 import { SEGMENTS } from '../src/arcade/Segments';
 import { SessionConfig as C } from '../src/session/SessionConfig';
 import { SessionRunner } from '../src/session/SessionRunner';
+import { normalCdf } from '../src/human/HumanAgent';
 import type { Obstacle } from '../src/arcade/Obstacle';
 import type { GameEvent } from '../src/session/events';
 
@@ -103,5 +104,28 @@ describe('physics / segments', () => {
     game.respawn();
     expect(game.alive).toBe(true);
     expect(events.at(-1)?.type).toBe('Respawn');
+  });
+});
+
+describe('overlay risk band', () => {
+  it('normalCdf is a sane CDF', () => {
+    expect(normalCdf(0)).toBeCloseTo(0.5, 6);
+    expect(normalCdf(1.96)).toBeCloseTo(0.975, 3);
+    expect(normalCdf(-1.96)).toBeCloseTo(0.025, 3);
+  });
+
+  it('death probability rises with frustration (wider band) and never contradicts the safe range', () => {
+    const r = new SessionRunner({ seed: 11, profileId: 'casual', buildHash: 'test' });
+    while (r.states.state !== 'PLAY') r.step();
+    const h = r.game.getUpcomingHazards(1)[0]!;
+    const calm = r.agent.jumpRisk(h, { frustration: 0, skill: 0.35 });
+    const tilted = r.agent.jumpRisk(h, { frustration: 0.8, skill: 0.35 });
+    const veteran = r.agent.jumpRisk(h, { frustration: 0, skill: 0.75 });
+    expect(tilted.sigmaPx).toBeGreaterThan(calm.sigmaPx);
+    expect(tilted.deathProbability).toBeGreaterThan(calm.deathProbability);
+    expect(veteran.deathProbability).toBeLessThan(calm.deathProbability);
+    expect(calm.safeMin).toBe(h.baseRange.min);
+    expect(calm.safeMax).toBe(h.baseRange.max);
+    expect(calm.expectedX).toBeGreaterThan(h.baseRange.min - 40);
   });
 });

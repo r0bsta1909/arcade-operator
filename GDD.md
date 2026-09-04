@@ -60,7 +60,9 @@ Meta-Schleife: Der Gast lernt (Skill steigt), der Spieler muss die Schwierigkeit
 
 Der CRT ist reine Ausgabe. Alle Gesten finden auf der **Hazard-Lane** statt — ein Streifen direkt unter dem CRT, durch den die nächsten drei Hindernisse als Chips von rechts nach links wandern, synchron zum Scrolling. Ein Chip erreicht die **Kontaktzone** (linker Rand, rot markiert) exakt im kritischen Frame.
 
-**Operator-Overlay (Pre-Signal):** 300 ms vor dem kritischen Frame zeichnet eine Overlay-Ebene *über* dem CRT die vorhergesagte Sprungkurve des Gastes als Geist, Landepunkt farbcodiert (grün = sicher, bernstein = knapp, rot = Tod). Die Overlay-Ebene ist nicht Teil des Fake-Games — der Gast sieht sie fiktional nicht. Sie ist die Maschinen-Sicht.
+**Operator-Overlay (Pre-Signal):** 1 s vor dem kritischen Frame zeichnet eine Overlay-Ebene *über* dem CRT die Maschinen-Sicht auf den nächsten Sprung: den sicheren Landebereich als grünen Balken und die wahrscheinliche Landung des Gastes als Band (erwarteter Absprung ± eine Streuung σ), farbcodiert nach Todeswahrscheinlichkeit (grün < 20 %, bernstein < 50 %, rot ≥ 50 %). Das Band wird breiter, wenn der Gast zittert (Frust), und ist damit die sichtbare Form des JITTER-Werts. Die Overlay-Ebene ist nicht Teil des Fake-Games — der Gast sieht sie fiktional nicht.
+
+*Änderung nach M1 STOPP 2 (2026-09-05):* v0.2 zeichnete einen einzelnen Geist-Sprung aus einem separaten Zufallsstrom, damit das Overlay „Schätzung, keine Wahrheit“ ist. Im Test zeigte der Geist grün, und der Gast starb — die Stichprobe hatte mit dem echten Sprung nichts zu tun und wurde als Lüge gelesen. Das Band zeigt die Verteilung statt einer Ziehung: ehrlich, ohne Orakel zu sein.
 
 | Geste | Wo | Wirkung | Hitze | Verdacht |
 |---|---|---|---|---|
@@ -278,7 +280,7 @@ operator/
 - **`GameLoop`** — 60 Hz Fixed-Timestep, Render mit Alpha. Bullet-Time über `Clock.timeScale`.
 - **`GameStateManager`** — `'ATTRACT' | 'READY' | 'PLAY' | 'DEATH_FREEZE' | 'CONTINUE' | 'VICTORY' | 'ABORT_FRUST' | 'ABORT_BORED' | 'ABORT_SUSPECT' | 'DEBRIEF'`. `DEATH_FREEZE` ist ein eigener Zustand mit 400-ms-Timer, in dem nur das Rückwirk-Veto erlaubt ist.
 - **`FakeArcadeGame`** — `tick(dt, manip)`, `getUpcomingHazards(n=3): Hazard[]` (mit `framesUntilCritical`, `idealJumpFrame`), emittiert `Death`, `NearMiss(deltaMs)`, `SegmentCleared`, `ScoreMilestone`. Kennt den Gast nicht.
-- **`HumanAgent`** — `tick(dt, world, psyche): HumanInput | null`. Reine Funktion der Sicht. Liefert zusätzlich `predictedJump(hazard): { frame, deltaMs }` für das Overlay — die Vorhersage nutzt denselben Fehlerterm, aber einen *separaten* PRNG-Stream, damit das Overlay eine Schätzung ist, keine Wahrheit.
+- **`HumanAgent`** — `tick(dt, world, psyche): HumanInput | null`. Reine Funktion der Sicht. Liefert zusätzlich `jumpRisk(hazard): { expectedX, sigmaPx, safeMin, safeMax, deathProbability }` für das Overlay — deterministisch aus der Fehlerverteilung, kein eigener PRNG-Stream (geändert nach M1 STOPP 2, siehe 2.2).
 - **`HumanPsychologyEngine`** — `apply(event)`, `tick(dt)`, `state: { frustration, boredom, tolerance, suspicion, suspicionFloor, channel: { frustMax, boreMax }, skill, jitter }`.
 - **`ManipulationLayer`** — hält `ManipulationState` pro Hazard-ID (`armed`, `hardened`, `hitboxScale`) plus global (`windowMs`, `speedTarget`, `timeScale`). Berechnet Sichtbarkeit greifender Gnade → Verdacht.
 - **`HazardLane`** — DOM-Komponente, bindet Chips an Hazard-IDs, nimmt Gesten entgegen, emittiert `OperatorAction` mit `hazardId`.

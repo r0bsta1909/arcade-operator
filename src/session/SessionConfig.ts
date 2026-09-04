@@ -53,8 +53,11 @@ export const SessionConfig = {
   nearMissMs: 60,
   /** GDD 2.2 / 2.5: death freeze = retroactive mercy window. */
   deathFreezeMs: 400,
-  /** GDD 2.2: overlay ghost appears 300 ms before the critical frame. */
-  overlayLeadMs: 300,
+  /** GDD 2.2 (amended after STOPP 2): the overlay risk band appears this long before the critical frame. Was 300 ms as a ghost sample; a decision aid needs more lead. */
+  overlayLeadMs: 1000,
+  /** Overlay band color thresholds on the guest's death probability for the next hazard. GDD 2.2. */
+  overlayRiskClose: 0.2,
+  overlayRiskDead: 0.5,
   /** Hazard lane shows chips this many frames ahead (GDD 2.2: 1-2 s). */
   laneLookaheadFrames: 120,
 

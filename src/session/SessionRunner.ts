@@ -65,7 +65,7 @@ export class SessionRunner {
     this.bus.onAny((e) => this.log.append(this.frame, e));
     this.manip = new ManipulationLayer(this.bus);
     this.game = new FakeArcadeGame(this.bus, this.manip);
-    this.agent = new HumanAgent(root.fork('human'), root.fork('humanPredict'), profile);
+    this.agent = new HumanAgent(root.fork('human'), profile);
     this.psyche = new HumanPsychologyEngine(profile);
     this.states = new GameStateManager(this.bus);
     this.heat = new HeatSystem(this.bus);
@@ -159,14 +159,14 @@ export class SessionRunner {
     return this.log;
   }
 
-  /** Ghost prediction for the overlay: first hazard within the lead time. GDD 2.2. */
+  /** Risk band for the overlay: first hazard within the lead time. GDD 2.2. */
   prediction(): JumpPrediction | null {
     if (this.states.state !== 'PLAY') return null;
     const next = this.game.getUpcomingHazards(1)[0];
     if (!next) return null;
     if (next.framesUntilCritical * MS_PER_FRAME > C.overlayLeadMs) return null;
     if (next.framesUntilCritical < -C.jumpFrames) return null;
-    return this.agent.predictedJump(next, this.psyche.state);
+    return this.agent.jumpRisk(next, this.psyche.state);
   }
 
   /** Milliseconds since the current death freeze started (for the lane countdown / latency). */

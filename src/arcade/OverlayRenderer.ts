@@ -1,17 +1,29 @@
 // Read-only machine-view overlay: ghost jump curve and landing marker. GDD 2.2.
 // Drawn on a second canvas above the CRT; fictionally invisible to the guest.
-// The prediction comes from HumanAgent.predictedJump (separate PRNG stream) and
-// is handed in as plain data so this module never imports from src/human.
+// The risk estimate comes from HumanAgent.jumpRisk and is handed in as plain
+// data so this module never imports from src/human.
 import { SessionConfig as C } from '../session/SessionConfig';
 import type { WorldSnapshot } from './FakeArcadeGame';
 import { jumpFeetY } from './Physics';
 
 export type PredictedOutcome = 'safe' | 'close' | 'dead';
 
+/**
+ * Risk estimate for the next hazard (GDD 2.2, amended after STOPP 2). The
+ * overlay no longer shows a fake single sample; it shows where the guest is
+ * likely to take off (expected take-off +- one sigma) against the safe
+ * take-off range, and the resulting death probability.
+ */
 export interface JumpPrediction {
   hazardId: string;
-  /** Predicted world front-x at take-off. */
-  takeoffX: number;
+  /** Expected take-off front-x (ideal + bias). */
+  expectedX: number;
+  /** One sigma of the guest's timing error in px. */
+  sigmaPx: number;
+  /** Safe take-off range under the base window. */
+  safeMin: number;
+  safeMax: number;
+  deathProbability: number;
   outcome: PredictedOutcome;
 }
 
@@ -30,33 +42,45 @@ export class OverlayRenderer {
     this.ctx = ctx;
   }
 
-  render(s: WorldSnapshot, prediction: JumpPrediction | null): void {
+  render(s: WorldSnapshot, p: JumpPrediction | null): void {
     const g = this.ctx;
     g.clearRect(0, 0, this.target.width, this.target.height);
-    if (!prediction) return;
+    if (!p) return;
 
     const sx = this.target.width / C.crtWidth;
     const sy = this.target.height / C.crtHeight;
     g.save();
     g.scale(sx, sy);
     const toScreen = (worldX: number) => worldX - s.distance + C.hopperScreenX;
+    const jump = C.jumpFrames * s.speed;
+    const color = MARKER_COLOR[p.outcome];
 
-    g.strokeStyle = 'rgba(0,229,255,0.7)';
+    // Safe landing range (green bar on the ground): where the hopper lands if it takes off inside the safe range.
+    g.fillStyle = 'rgba(61,220,132,0.55)';
+    g.fillRect(toScreen(p.safeMin + jump) - C.hopperWidth, C.groundY - 2, p.safeMax - p.safeMin + C.hopperWidth, 2);
+
+    // Likely landing band (expected +- sigma), colored by risk.
+    const bandLeft = toScreen(p.expectedX - p.sigmaPx + jump) - C.hopperWidth;
+    const bandWidth = 2 * p.sigmaPx + C.hopperWidth;
+    g.fillStyle = color;
+    g.globalAlpha = 0.35;
+    g.fillRect(bandLeft, C.groundY - 6, bandWidth, 4);
+    g.globalAlpha = 1;
+    g.fillRect(toScreen(p.expectedX + jump) - C.hopperWidth, C.groundY - 6, C.hopperWidth, 4);
+
+    // Ghost parabola from the expected take-off.
+    g.strokeStyle = color;
     g.lineWidth = 1;
     g.setLineDash([2, 2]);
     g.beginPath();
     for (let f = 0; f <= C.jumpFrames; f++) {
-      const x = toScreen(prediction.takeoffX + f * s.speed);
+      const x = toScreen(p.expectedX + f * s.speed);
       const y = jumpFeetY(f) - C.hopperHeight / 2;
       if (f === 0) g.moveTo(x, y);
       else g.lineTo(x, y);
     }
     g.stroke();
     g.setLineDash([]);
-
-    const landX = toScreen(prediction.takeoffX + C.jumpFrames * s.speed);
-    g.fillStyle = MARKER_COLOR[prediction.outcome];
-    g.fillRect(landX - C.hopperWidth, C.groundY - 2, C.hopperWidth, 3);
     g.restore();
   }
 }
