@@ -7,6 +7,7 @@ import { ManipulationLayer } from '../src/arcade/ManipulationLayer';
 import { slackForWindow, takeoffRange } from '../src/arcade/Physics';
 import { SEGMENTS } from '../src/arcade/Segments';
 import { SessionConfig as C } from '../src/session/SessionConfig';
+import { SessionRunner } from '../src/session/SessionRunner';
 import type { Obstacle } from '../src/arcade/Obstacle';
 import type { GameEvent } from '../src/session/events';
 
@@ -71,6 +72,23 @@ describe('physics / segments', () => {
     expect(events.filter((e) => e.type === 'SegmentCleared').length).toBeGreaterThanOrEqual(1);
     expect(game.victory).toBe(true);
     expect(game.score).toBeGreaterThanOrEqual(C.victoryScore);
+  });
+
+  it('respawn gives the guest a full lead before the next hazard (STOPP 2: two lives at once)', () => {
+    // Old code: hopper respawned 16 px before the previous worm and died 3 frames later in 40 % of respawns.
+    let respawns = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const r = new SessionRunner({ seed, buildHash: 'test' });
+      const ev = r.runToEnd(() => []).all();
+      for (let i = 0; i < ev.length; i++) {
+        if (ev[i]!.e.type !== 'Respawn') continue;
+        respawns++;
+        const death = ev.slice(i + 1).find((x) => x.e.type === 'Death');
+        if (!death) continue;
+        expect(death.f - ev[i]!.f, 'seed ' + seed + ' died ' + (death.f - ev[i]!.f) + ' frames after respawn').toBeGreaterThanOrEqual(60);
+      }
+    }
+    expect(respawns).toBeGreaterThan(20);
   });
 
   it('a guest who never jumps dies at the first crater and can respawn', () => {

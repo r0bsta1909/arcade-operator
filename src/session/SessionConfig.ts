@@ -24,7 +24,7 @@ export const SessionConfig = {
   jumpHeightPx: 24,
   /** Frames the hopper falls inside a crater before Death is emitted. */
   craterFallFrames: 8,
-  /** After a death the hopper respawns this many px before the killing hazard. */
+  /** After a death the hopper respawns at least this many px before the killing hazard and before every hazard ahead of it. */
   respawnLeadPx: 96,
   /** Hazards inside this distance after respawn are still active (no grace period). */
   segmentLengthPx: 1200, // GDD 3: 20 s per segment at 1.0x = 1200 frames = 1200 px

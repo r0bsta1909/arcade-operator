@@ -202,7 +202,7 @@ export class FakeArcadeGame {
   respawn(): void {
     const o = this.deathHazard;
     if (this.alive || !o) return;
-    this.distance = Math.max(0, o.x - C.respawnLeadPx);
+    this.distance = this.safeRespawnX(o);
     for (const ob of this.obstacles) {
       if (ob.x >= this.distance) {
         ob.resolved = false;
@@ -274,6 +274,22 @@ export class FakeArcadeGame {
   }
 
   // ------------------------------------------------------------- helpers
+
+  /**
+   * Respawn point before the killing hazard with a full lead before *every*
+   * hazard ahead. Segments space hazards 80-112 px apart while the lead is
+   * 96 px, so the naive point sits right in front of the previous hazard and
+   * the guest dies again within the freeze (STOPP 2 bug: "two lives at once").
+   */
+  private safeRespawnX(o: Obstacle): number {
+    let x = o.x - C.respawnLeadPx;
+    for (let guard = 0; guard < 8; guard++) {
+      const ahead = this.obstacles.find((h) => h.x + h.width + C.hopperWidth >= x);
+      if (!ahead || ahead.x - x >= C.respawnLeadPx) break;
+      x = ahead.x - C.respawnLeadPx;
+    }
+    return Math.max(0, x);
+  }
 
   private currentTarget(): Obstacle | null {
     for (const o of this.obstacles) {
