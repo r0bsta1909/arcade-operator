@@ -21,6 +21,8 @@ export type HazardType = 'crater' | 'worm' | 'probe' | 'meteor';
 
 /** Operator gestures that can be scripted, logged and replayed. GDD 2.2. */
 export type OperatorActionKind = 'arm' | 'veto' | 'retroMercy';
+/** What an accepted action did: veto either disarms an armed chip or hardens it. GDD 2.2. */
+export type OperatorEffect = 'armed' | 'disarmed' | 'hardened' | 'revived';
 
 export type GameEvent =
   // --- fake game (FakeArcadeGame) ---
@@ -36,7 +38,7 @@ export type GameEvent =
   | { type: 'MercyExpired'; hazardId: string }
   | { type: 'RetroMercy'; hazardId: string; msAfterDeath: number }
   // --- operator ---
-  | { type: 'OperatorAction'; action: OperatorActionKind; hazardId?: string }
+  | { type: 'OperatorAction'; action: OperatorActionKind; hazardId?: string; effect: OperatorEffect }
   | { type: 'Heat'; value: number }
   | { type: 'LatencySample'; ms: number }
   | { type: 'CrtTouch'; x: number; y: number }

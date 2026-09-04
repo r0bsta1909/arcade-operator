@@ -65,6 +65,15 @@ describe('determinism', () => {
     }
   });
 
+  it('measurement events (latency, CRT touch) do not change the hash', () => {
+    const a = run(7, script);
+    const b = run(7, script);
+    b.append(500, { type: 'LatencySample', ms: 312 });
+    b.append(600, { type: 'CrtTouch', x: 0.4, y: 0.5 });
+    expect(b.hash()).toBe(a.hash());
+    expect(b.length).toBe(a.length + 2);
+  });
+
   it('log survives a JSON round trip', () => {
     const a = run(7, script);
     const b = SessionLog.fromJSON(JSON.parse(JSON.stringify(a.toJSON())));

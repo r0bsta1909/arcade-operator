@@ -9,6 +9,7 @@ import { FakeArcadeGame } from '../arcade/FakeArcadeGame';
 import { ManipulationLayer } from '../arcade/ManipulationLayer';
 import type { JumpPrediction } from '../arcade/OverlayRenderer';
 import { HumanAgent } from '../human/HumanAgent';
+import { HeatSystem } from '../operator/HeatSystem';
 import { HumanPsychologyEngine } from '../human/HumanPsychologyEngine';
 import { ACTIVE_PROFILES, PROFILES, type ProfileId } from '../human/Profiles';
 import { CONTINUE_FRAMES, DEATH_FREEZE_FRAMES, GameStateManager, READY_FRAMES } from './GameStateManager';
@@ -43,6 +44,7 @@ export class SessionRunner {
   readonly agent: HumanAgent;
   readonly psyche: HumanPsychologyEngine;
   readonly states: GameStateManager;
+  readonly heat: HeatSystem;
   readonly profileId: ProfileId;
   /** Session frame counter (runs during freeze and continue as well). */
   frame = 0;
@@ -66,6 +68,7 @@ export class SessionRunner {
     this.agent = new HumanAgent(root.fork('human'), root.fork('humanPredict'), profile);
     this.psyche = new HumanPsychologyEngine(profile);
     this.states = new GameStateManager(this.bus);
+    this.heat = new HeatSystem(this.bus);
     this.bus.onAny((e) => this.psyche.apply(e, this.frame));
     this.states.transition('READY', 0);
   }
@@ -126,6 +129,7 @@ export class SessionRunner {
     }
 
     this.psyche.tick();
+    this.heat.tick();
     if (this.frame % C.psycheSampleEveryFrames === 0) {
       const p = this.psyche.state;
       this.bus.emit({
@@ -174,16 +178,20 @@ export class SessionRunner {
     const st = this.states;
     if (cmd.action === 'retroMercy') {
       if (!st.inDeathFreeze) return;
-      this.bus.emit({ type: 'OperatorAction', action: 'retroMercy' });
+      this.bus.emit({ type: 'OperatorAction', action: 'retroMercy', effect: 'revived' });
       this.game.revive(this.msSinceDeath());
       st.transition('PLAY', this.frame);
       return;
     }
     if (st.state !== 'PLAY' || !cmd.hazardId) return;
     if (!this.game.getUpcomingHazards(3).some((h) => h.id === cmd.hazardId)) return;
-    this.bus.emit({ type: 'OperatorAction', action: cmd.action, hazardId: cmd.hazardId });
-    if (cmd.action === 'arm') this.manip.arm(cmd.hazardId);
-    else this.manip.veto(cmd.hazardId);
+    if (cmd.action === 'arm') {
+      this.manip.arm(cmd.hazardId);
+      this.bus.emit({ type: 'OperatorAction', action: 'arm', hazardId: cmd.hazardId, effect: 'armed' });
+    } else {
+      const effect = this.manip.veto(cmd.hazardId);
+      this.bus.emit({ type: 'OperatorAction', action: 'veto', hazardId: cmd.hazardId, effect });
+    }
   }
 
   private end(reason: EndReason, cause: EndCause): void {

@@ -59,12 +59,12 @@ Arbeite die Schritte in dieser Reihenfolge ab. Hake sie hier ab. Halte an jedem 
 
 ## Schritt 5 — Operator & Hazard-Lane
 
-- [ ] `operator/OperatorActions.ts` — `arm(hazardId)`, `veto(hazardId)`, `retroMercy()`. `veto` auf gescharften Chip = aufheben, sonst = Härte.
-- [ ] `operator/HeatSystem.ts` — Hitze +20 beim Scharfen, +10 wenn greift, +15 Härte, +35 Rückwirk, −8/s. In M1 nur als Zahl, kein Overheat.
-- [ ] `operator/OperatorInput.ts` — Pointer-Events. Swipe: ≥ 40 px, ≤ 250 ms, vertikal dominant. `pointer-capture` auf der Lane. Tastatur: `W`/`S`/Pfeile auf vordersten Chip, `1`–`3` wählen.
-- [ ] `operator/LatencyProbe.ts` — misst `Death`-Event → `pointerup` des Rückwirk-Swipes in ms; loggt `LatencySample(ms)`. Loggt jeden `pointerdown` auf dem CRT-Canvas als `CrtTouch`.
-- [ ] `dashboard/HazardLane.ts` — Chips als DOM-Elemente, Position via CSS-Transform aus `framesUntilCritical`, Kontaktzone rot, gescharft cyan, in Kontaktzone grau. Death-Freeze: Lane pulsiert rot mit ablaufendem Balken.
-- [ ] Commit: `feat(operator): hazard lane, arm/veto/retro mercy, latency probe`.
+- [x] `operator/OperatorActions.ts` — `arm(hazardId)`, `veto(hazardId)`, `retroMercy()`. `veto` auf gescharften Chip = aufheben, sonst = Härte.
+- [x] `operator/HeatSystem.ts` — Hitze +20 beim Scharfen, +10 wenn greift, +15 Härte, +35 Rückwirk, −8/s. In M1 nur als Zahl, kein Overheat.
+- [x] `operator/OperatorInput.ts` — Pointer-Events. Swipe: ≥ 40 px, ≤ 250 ms, vertikal dominant. `pointer-capture` auf der Lane. Tastatur: `W`/`S`/Pfeile auf vordersten Chip, `1`–`3` wählen.
+- [x] `operator/LatencyProbe.ts` — misst `Death`-Event → `pointerup` des Rückwirk-Swipes in ms; loggt `LatencySample(ms)`. Loggt jeden `pointerdown` auf dem CRT-Canvas als `CrtTouch`.
+- [x] `dashboard/HazardLane.ts` — Chips als DOM-Elemente, Position via CSS-Transform aus `framesUntilCritical`, Kontaktzone rot, gescharft cyan, in Kontaktzone grau. Death-Freeze: Lane pulsiert rot mit ablaufendem Balken.
+- [x] Commit: `feat(operator): hazard lane, arm/veto/retro mercy, latency probe`.
 
 ## Schritt 6 — Dashboard & Layout (roh)
 

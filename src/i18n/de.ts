@@ -1,2 +1,47 @@
-// All German game texts. Never hardcode strings in components.
-// GDD CLAUDE.md
+// All German game texts. Never hardcode strings in components. CLAUDE.md.
+export const de = {
+  lane: {
+    contact: 'KONTAKT',
+    hintUp: '↑ Gnade',
+    hintDown: '↓ Veto',
+    freeze: 'VETO!',
+    chip: { crater: 'Krater', worm: 'Wurm', probe: 'Sonde', meteor: 'Meteorit' },
+  },
+  crt: {
+    booting: 'Automat fährt hoch…',
+    ready: 'PLAYER 1 READY',
+    continue: (s: number) => `CONTINUE? ${s}`,
+    victory: 'NEW HIGH SCORE',
+    abortFrust: 'PLAYER 1 LEFT',
+    abortBored: 'INSERT COIN',
+    abortSuspect: 'THIS THING IS RIGGED',
+    touchHint: 'Lane ↓',
+  },
+  dashboard: {
+    frust: 'FRUST',
+    bored: 'BORED',
+    tolerance: 'TOLERANCE',
+    jitter: 'JITTER',
+    heat: 'HEAT',
+    coin: 'COIN',
+    feedback: 'FEEDBACK',
+  },
+  debrief: {
+    title: 'DEBRIEF',
+    victory: 'Der Gast hat den Highscore geknackt.',
+    abortFrust: 'Der Gast ist frustriert gegangen. Faustschlag aufs Gehäuse.',
+    abortBored: 'Der Gast hat sich gelangweilt. Schritte entfernen sich.',
+    abortSuspect: 'Der Gast hält den Automaten für manipuliert.',
+    livesGone: 'Drei Leben verbraucht, kein Continue.',
+    score: (s: number) => `Score ${s}`,
+    inChannel: (pct: number) => `${pct} % der Zeit im Kanal`,
+    profile: (label: string) => `Profil: ${label}`,
+    legendFrust: 'Frust',
+    legendBored: 'Langeweile',
+    legendDeath: 'Tod',
+    legendMercy: 'Gnade griff',
+    again: 'Nochmal',
+    feedback: 'Feedback',
+    build: (hash: string) => `Build ${hash}`,
+  },
+} as const;

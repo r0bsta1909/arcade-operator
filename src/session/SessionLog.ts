@@ -6,6 +6,14 @@ import type { GameEvent } from './events';
 
 export const LOG_VERSION = 1;
 
+/**
+ * Wall-clock observations about the device (H5 latency, H6 CRT touches). They
+ * live in the log for the feedback digest but are not inputs to the simulation,
+ * so hash() skips them: same seed + same operator inputs => same hash, whatever
+ * the phone did.
+ */
+export const MEASUREMENT_EVENTS: ReadonlySet<GameEvent['type']> = new Set(['LatencySample', 'CrtTouch']);
+
 export interface SessionLogHeader {
   version: number;
   seed: number;
@@ -56,9 +64,11 @@ export class SessionLog {
     return log;
   }
 
-  /** FNV-1a over canonical JSON. Synchronous, identical in Bun, Node and browsers. */
+  /** FNV-1a over canonical JSON without measurement events. Synchronous, identical in Bun, Node and browsers. */
   hash(): string {
-    return fnv1a(canonicalJson(this.toJSON())).toString(16).padStart(8, '0');
+    const json = this.toJSON();
+    json.entries = json.entries.filter((x) => !MEASUREMENT_EVENTS.has(x.e.type));
+    return fnv1a(canonicalJson(json)).toString(16).padStart(8, '0');
   }
 }
 
