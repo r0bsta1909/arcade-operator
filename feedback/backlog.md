@@ -20,3 +20,9 @@ Things noticed during M1 that are out of scope (see BRIEF-M1 Scope-Bremse).
 - Rob: „ich wische immer nach oben und der Highscore wird immer erreicht.“ Ohne Kosten gibt es keine Entscheidung. Overheat (GDD 2.1) nach M1 vorgezogen; Verdacht (2.4) und Langeweile-Druck bleiben M2. Gnädig-Bot gewinnt mit Overheat noch 96 %, weil Rückwirk-Gnade jeden Tod heilt, sobald die Sperre vorbei ist. Verdacht ist die eigentliche Bremse.
 - Bug „zwei Leben auf einmal“: Respawn stand 16 px vor dem vorherigen Wurm. Behoben, Regressionstest über 40 Seeds.
 - σBase zurück auf 120 (Passiv verliert 78 % nach dem Respawn-Fix; die früheren 85 % enthielten den Bug).
+
+## Aus M1 STOPP 2, dritte Runde (2026-09-05)
+
+- Overlay zeigte einen Zufalls-Geist (GDD 5.3) → als Lüge gelesen. Jetzt Risiko-Band aus der Fehlerverteilung. GDD 2.2/5.3 geändert.
+- Verdacht (GDD 2.4) in M1, Casual-Empfindlichkeit 1,0. Sieg bei 4.500 statt 3.000, Segment 2 auf 32-px-Krater gedeckelt (100-ms-Fenster waren für jeden Bot tödlich).
+- Veteran aktiv. Beinahe-Tod gefühlt relativ zu σ; Streak-Langeweile 3 / 0,14. Offen: Tilter und Kind, sinkende Kanalschwellen, Sonden/Meteoriten (M2).

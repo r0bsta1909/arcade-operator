@@ -27,5 +27,5 @@ export const PROFILES: Record<ProfileId, Profile> = {
   kid: { id: 'kid', label: 'Das Kind', skillStart: 0.3, learnRate: 2.0, frustMult: 1.0, boredMult: 1.2, suspicionSensitivity: 0.6 },
 };
 
-/** Profiles that can be rolled for a session. GDD 6 / M1: casual only. */
-export const ACTIVE_PROFILES: readonly ProfileId[] = ['casual'];
+/** Profiles that can be rolled for a session. GDD 6 / M1: casual; veteran added after STOPP 2 so hardening has a purpose. */
+export const ACTIVE_PROFILES: readonly ProfileId[] = ['casual', 'veteran'];

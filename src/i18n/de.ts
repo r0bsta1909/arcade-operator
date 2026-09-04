@@ -54,6 +54,13 @@ export const de = {
     score: (s: number) => `Score ${s}`,
     inChannel: (pct: number) => `${pct} % der Zeit im Kanal`,
     profile: (label: string) => `Profil: ${label}`,
+    /** GDD 2.6: one sentence per profile that explains what the guest needed. */
+    profileHint: {
+      casual: (deaths: number) => `Der Casual verzeiht keine Serientode — ${deaths} in einer Runde.`,
+      veteran: (streak: number) => `Der Veteran langweilt sich bei Streaks über ${3 - 1} — du hast ihm ${streak} gegeben.`,
+      tilter: (deaths: number) => `Der Tilter kippt bei Serientoden — ${deaths} in einer Runde.`,
+      kid: (streak: number) => `Das Kind will Reize — längste Streak ${streak}.`,
+    },
     legendFrust: 'Frust',
     legendBored: 'Langeweile',
     legendSuspect: 'Verdacht',

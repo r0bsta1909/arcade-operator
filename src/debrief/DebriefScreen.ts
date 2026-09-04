@@ -38,6 +38,15 @@ export class DebriefScreen {
     const mercies = [...log.filter('MercyApplied'), ...log.filter('RetroMercy')].map(
       (m) => `<rect x="${(x(m.f) - 4).toFixed(1)}" y="${(y(0.9) - 4).toFixed(1)}" width="8" height="8" fill="#00e5ff"><title>${de.debrief.legendMercy}</title></rect>`,
     );
+    const deathsCount = log.filter('Death').length;
+    let streak = 0;
+    let longestStreak = 0;
+    for (const e of log.all()) {
+      if (e.e.type === 'HazardCleared' && e.e.marginMs >= C.nearMissMs) longestStreak = Math.max(longestStreak, ++streak);
+      else if (e.e.type === 'HazardCleared' || e.e.type === 'Death') streak = 0;
+    }
+    const hint =
+      profileId === 'casual' || profileId === 'tilter' ? de.debrief.profileHint[profileId](deathsCount) : de.debrief.profileHint[profileId](longestStreak);
     const inChannel = samples.length
       ? Math.round((100 * samples.filter((s) => s.e.frustration < C.channelFrustMax && s.e.boredom < C.channelBoredMax).length) / samples.length)
       : 0;
@@ -55,6 +64,7 @@ export class DebriefScreen {
       <h1>${de.debrief.title}</h1>
       <p>${outcome}${result.cause === 'lives' ? ` ${de.debrief.livesGone}` : ''}</p>
       <p>${de.debrief.score(result.score)} · ${de.debrief.inChannel(inChannel)} · ${de.debrief.profile(PROFILES[profileId].label)}</p>
+      <p>${hint}</p>
       <svg class="debrief-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
         <rect x="${PAD}" y="${y(C.channelFrustMax).toFixed(1)}" width="${W - 2 * PAD}" height="${(y(0) - y(C.channelFrustMax)).toFixed(1)}" fill="rgba(61,220,132,0.12)"/>
         <line x1="${PAD}" y1="${y(C.channelFrustMax).toFixed(1)}" x2="${W - PAD}" y2="${y(C.channelFrustMax).toFixed(1)}" stroke="#3ddc84" stroke-dasharray="4 4"/>

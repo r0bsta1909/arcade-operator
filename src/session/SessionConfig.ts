@@ -49,8 +49,10 @@ export const SessionConfig = {
   mercyCoyoteMs: 120,
   /** GDD 2.2: mercy enlarges the landing area (early side). Start value. */
   mercyLandingMs: 80,
-  /** GDD 2.3: near-miss = survived with less than 60 ms margin to death. */
+  /** GDD 2.3: near-miss = survived with less than 60 ms margin to death (physical event from the game). */
   nearMissMs: 60,
+  /** The guest *feels* a near-miss only if the margin is also below this many of his own sigmas (calibrated after STOPP 2: a 30 ms veteran is not thrilled by a 50 ms margin). */
+  nearMissSigmaFactor: 1.0,
   /** GDD 2.2 / 2.5: death freeze = retroactive mercy window. */
   deathFreezeMs: 400,
   /** GDD 2.2 (amended after STOPP 2): the overlay risk band appears this long before the critical frame. Was 300 ms as a ghost sample; a decision aid needs more lead. */
@@ -110,9 +112,9 @@ export const SessionConfig = {
     serialDeathQuadGain: 0.375,
     nearMiss: { frust: 0.08, bored: -0.12, reliefFrust: -0.15, reliefMs: 3000 },
     mercyNoticed: { frust: 0.1, bored: 0.05 },
-    /** Boredom per safe jump once the streak reaches the threshold. */
-    streakThreshold: 5,
-    streakBoredPerJump: 0.06,
+    /** Boredom per safe jump once the streak reaches the threshold. GDD start values 5 / 0.06 never bored anyone in a 45 s round; calibrated after STOPP 2 to 3 / 0.14 (passive veteran leaves bored in 89 %, heuristic bot keeps him in 51 %). */
+    streakThreshold: 3,
+    streakBoredPerJump: 0.14,
     newSegment: { frust: 0, bored: -0.1 },
     milestone: { frust: -0.05, bored: -0.12 },
   },

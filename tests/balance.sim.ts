@@ -1,8 +1,9 @@
 // Headless balancing: passive / merciful / heuristic bots. GDD 5.4.
-// Usage: bun tests/balance.sim.ts [--smoke] [--bots passive,merciful,heuristic] [--n 1000] [--seed 1] [--example]
-// M1 evaluates the passive bot only (BRIEF step 4); the others exist for M2.
+// Usage: bun tests/balance.sim.ts [--smoke] [--bots passive,merciful,heuristic] [--profiles casual,veteran] [--n 1000] [--seed 1] [--example]
+// One row per bot x profile.
 import { SessionRunner, type OperatorCommand } from '../src/session/SessionRunner';
 import type { EndCause, EndReason } from '../src/session/events';
+import { ACTIVE_PROFILES, type ProfileId } from '../src/human/Profiles';
 
 type Bot = (r: SessionRunner) => OperatorCommand[];
 
@@ -39,7 +40,7 @@ interface Stats {
   mercies: number[];
 }
 
-function runBot(name: string, bot: Bot, n: number, seed0: number): Stats {
+function runBot(name: string, bot: Bot, n: number, seed0: number, profileId: ProfileId): Stats {
   const st: Stats = {
     n,
     wins: 0,
@@ -51,7 +52,7 @@ function runBot(name: string, bot: Bot, n: number, seed0: number): Stats {
     mercies: [],
   };
   for (let i = 0; i < n; i++) {
-    const r = new SessionRunner({ seed: seed0 + i, buildHash: `sim-${name}` });
+    const r = new SessionRunner({ seed: seed0 + i, profileId, buildHash: `sim-${name}` });
     const log = r.runToEnd(bot);
     const res = r.result!;
     if (res.reason === 'VICTORY') st.wins++;
@@ -73,7 +74,7 @@ const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.l
 const pct = (x: number, n: number) => `${((100 * x) / n).toFixed(0)} %`;
 
 function table(rows: Array<[string, Stats]>): string {
-  const head = '| Bot | n | Sieg | Frust-Abbruch | Langeweile-Abbruch | Verdachts-Abbruch | davon Leben weg | Dauer Ø / Median (s) | Score Ø | Tode Ø | Gnaden Ø |';
+  const head = '| Bot / Profil | n | Sieg | Frust-Abbruch | Langeweile-Abbruch | Verdachts-Abbruch | davon Leben weg | Dauer Ø / Median (s) | Score Ø | Tode Ø | Gnaden Ø |';
   const sep = '|---|---|---|---|---|---|---|---|---|---|---|';
   const lines = rows.map(([name, s]) =>
     `| ${name} | ${s.n} | ${pct(s.wins, s.n)} | ${pct(s.reasons.ABORT_FRUST, s.n)} | ${pct(s.reasons.ABORT_BORED, s.n)} | ${pct(s.reasons.ABORT_SUSPECT, s.n)} | ${pct(s.causes.lives, s.n)} | ${mean(s.durations).toFixed(0)} / ${median(s.durations).toFixed(0)} | ${mean(s.scores).toFixed(0)} | ${mean(s.deaths).toFixed(1)} | ${mean(s.mercies).toFixed(1)} |`,
@@ -102,12 +103,13 @@ const smoke = args.includes('--smoke');
 const n = Number(flag('--n') ?? (smoke ? 50 : 1000));
 const seed0 = Number(flag('--seed') ?? 1);
 const botNames = (flag('--bots') ?? (smoke ? 'passive' : 'passive,merciful,heuristic')).split(',');
+const profiles = (flag('--profiles')?.split(',') ?? ACTIVE_PROFILES) as ProfileId[];
 
 const t0 = Date.now();
-const rows: Array<[string, Stats]> = botNames.map((b) => {
+const rows: Array<[string, Stats]> = botNames.flatMap((b) => {
   const bot = BOTS[b];
   if (!bot) throw new Error(`unknown bot ${b}`);
-  return [b, runBot(b, bot, n, seed0)];
+  return profiles.map((pr): [string, Stats] => [`${b} / ${pr}`, runBot(b, bot, n, seed0, pr)]);
 });
 console.log(table(rows));
 console.log(`\n${n} Sessions/Bot in ${((Date.now() - t0) / 1000).toFixed(1)} s`);

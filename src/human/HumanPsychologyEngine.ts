@@ -73,17 +73,22 @@ export class HumanPsychologyEngine {
         break;
       }
       case 'NearMiss':
-        this.bump(p.nearMiss.frust, p.nearMiss.bored);
-        // GDD 2.3: above 50 suspicion the relief is halved ("I could not have died anyway").
-        this.reliefRemaining = this.state.suspicion > C.suspicion.halvesReliefAbove ? p.nearMiss.reliefFrust / 2 : p.nearMiss.reliefFrust;
-        this.reliefFramesLeft = p.nearMiss.reliefMs / MS_PER_FRAME;
-        this.safeStreak = 0;
-        break;
-      case 'HazardCleared':
-        if (event.marginMs < C.nearMissMs) break; // counted as NearMiss
+        break; // physical event; whether the guest *feels* it is decided on HazardCleared below
+      case 'HazardCleared': {
+        // A near-miss is felt relative to the guest's own precision: a 30 ms veteran is not thrilled by a 50 ms margin.
+        const felt = event.marginMs < Math.min(C.nearMissMs, C.nearMissSigmaFactor * this.state.jitter);
+        if (felt) {
+          this.bump(p.nearMiss.frust, p.nearMiss.bored);
+          // GDD 2.3: above 50 suspicion the relief is halved ("I could not have died anyway").
+          this.reliefRemaining = this.state.suspicion > C.suspicion.halvesReliefAbove ? p.nearMiss.reliefFrust / 2 : p.nearMiss.reliefFrust;
+          this.reliefFramesLeft = p.nearMiss.reliefMs / MS_PER_FRAME;
+          this.safeStreak = 0;
+          break;
+        }
         this.safeStreak++;
         if (this.safeStreak >= p.streakThreshold) this.bump(0, p.streakBoredPerJump);
         break;
+      }
       case 'SegmentCleared':
         this.bump(p.newSegment.frust, p.newSegment.bored);
         this.state.skill = Math.min(C.skillMax, this.state.skill + this.profile.learnRate * C.skillPerSegment);

@@ -97,9 +97,9 @@ Beide können gleichzeitig hoch sein (Veteran, der an trivialen Stellen billig s
 |---|---|---|---|
 | Tod (ehrlich) | +0,18 | −0,05 | Serientode quadratisch: 3. Tod in 20 s = +0,45 |
 | Tod bei ≥ 90 % Highscore | +0,30 | −0,05 | "Fast geschafft" ist der stärkste Frust |
-| Beinahe-Tod (Delta < 60 ms, überlebt) | +0,08, dann −0,15 über 3 s | −0,12 | Adrenalin-Spike, Erleichterung — beste Flow-Quelle |
+| Beinahe-Tod (Delta < 60 ms, überlebt) | +0,08, dann −0,15 über 3 s | −0,12 | Adrenalin-Spike, Erleichterung — beste Flow-Quelle. *Gefühlt* wird er nur, wenn der Abstand auch unter der eigenen Streuung σ liegt (M1-Kalibrierung: ein 30-ms-Veteran erschrickt nicht bei 50 ms Abstand) |
 | Gnade bemerkt (Verdacht +) | +0,10 | +0,05 | "Fühlt sich komisch an" |
-| Sprung ohne Gefahr (Streak ≥ 5) | 0 | +0,06 pro Sprung | Langeweile schleicht |
+| Sprung ohne Gefahr (Streak ≥ 3) | 0 | +0,14 pro Sprung | Langeweile schleicht. Startwerte 5 / 0,06 erzeugten in 45-s-Runden nie Langeweile (M1-Kalibrierung 2026-09-05) |
 | Neues Segment / neuer Gegnertyp | 0 | −0,10 | Neugier |
 | Punkte-Meilenstein (1.000) | −0,05 | −0,12 | Belohnung |
 | Bullet-Time | −0,05 | −0,03, danach +0,02/s für 10 s | Abnutzung |

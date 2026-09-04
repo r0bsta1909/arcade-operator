@@ -34,14 +34,14 @@ describe('HumanPsychologyEngine', () => {
     expect(e.state.frustration).toBeCloseTo(C.psych.death.frust * PROFILES.casual.frustMult, 5);
   });
 
-  it('safe streaks feed boredom from the fifth jump on', () => {
+  it('safe streaks feed boredom once the streak threshold is reached', () => {
     const e = new HumanPsychologyEngine(neutral);
     e.state.boredom = 0.5;
-    for (let i = 0; i < 4; i++) e.apply({ type: 'HazardCleared', hazardId: `h${i}`, marginMs: 120 }, i * 60);
+    for (let i = 0; i < C.psych.streakThreshold - 1; i++) e.apply({ type: 'HazardCleared', hazardId: `h${i}`, marginMs: 120 }, i * 60);
     expect(e.state.boredom).toBe(0.5);
     e.apply({ type: 'HazardCleared', hazardId: 'h5', marginMs: 120 }, 300);
     expect(e.state.boredom).toBeCloseTo(0.5 + C.psych.streakBoredPerJump, 5);
-    e.apply({ type: 'NearMiss', hazardId: 'h6', marginMs: 20 }, 360); // resets streak
+    e.apply({ type: 'HazardCleared', hazardId: 'h6', marginMs: 20 }, 360); // felt near-miss resets streak
     e.apply({ type: 'HazardCleared', hazardId: 'h7', marginMs: 120 }, 420);
     expect(e.state.boredom).toBeCloseTo(0.5 + C.psych.streakBoredPerJump + C.psych.nearMiss.bored, 5);
   });
@@ -49,7 +49,7 @@ describe('HumanPsychologyEngine', () => {
   it('near-miss spikes frustration, then relief pays out over 3 s', () => {
     const e = new HumanPsychologyEngine(neutral);
     e.state.frustration = 0.4;
-    e.apply({ type: 'NearMiss', hazardId: 'h', marginMs: 30 }, 10);
+    e.apply({ type: 'HazardCleared', hazardId: 'h', marginMs: 30 }, 10);
     expect(e.state.frustration).toBeCloseTo(0.48, 5);
     expect(e.state.boredom).toBe(0);
     const frames = Math.round(C.psych.nearMiss.reliefMs / (1000 / 60));
@@ -68,5 +68,18 @@ describe('HumanPsychologyEngine', () => {
     expect(e.state.tolerance).toBeLessThan(50 - C.toleranceLossMinPerSec + 0.5);
     e.state.tolerance = 0;
     expect(e.abortReason()).toBe('ABORT_BORED');
+  });
+});
+
+describe('felt near-miss is relative to the guest precision', () => {
+  it('a 50 ms margin thrills the casual (sigma ~78) but not the veteran (sigma 30)', () => {
+    const casual = new HumanPsychologyEngine(PROFILES.casual);
+    const veteran = new HumanPsychologyEngine(PROFILES.veteran);
+    casual.apply({ type: 'HazardCleared', hazardId: 'h', marginMs: 50 }, 10);
+    veteran.apply({ type: 'HazardCleared', hazardId: 'h', marginMs: 50 }, 10);
+    expect(casual.state.frustration).toBeGreaterThan(0);
+    expect(veteran.state.frustration).toBe(0);
+    veteran.apply({ type: 'HazardCleared', hazardId: 'h2', marginMs: 20 }, 20);
+    expect(veteran.state.frustration).toBeGreaterThan(0);
   });
 });
