@@ -44,12 +44,6 @@ function fitCanvases(): void {
   for (const c of [dashboard.crtCanvas, dashboard.overlayCanvas]) {
     c.width = C.crtWidth * scale;
     c.height = C.crtHeight * scale;
-    c.style.width = `${(C.crtWidth * scale) / dpr}px`;
-    c.style.height = `${(C.crtHeight * scale) / dpr}px`;
-    c.style.left = '50%';
-    c.style.top = '50%';
-    c.style.transform = 'translate(-50%, -50%)';
-    c.style.inset = 'auto';
   }
 }
 
@@ -88,6 +82,7 @@ const loop = new GameLoop({
     if (runner.ended && runner.result && ++endScreenFrames >= END_SCREEN_FRAMES) {
       // Hold the end screen for a moment, then debrief.
       loop.stop();
+      dashboard.root.hidden = true;
       debrief.show(runner.log, runner.result, runner.profileId, BUILD_HASH);
     }
   },

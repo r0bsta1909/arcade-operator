@@ -53,8 +53,8 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
+  object-fit: contain; /* bitmap is an integer multiple of 160x144, letterboxed here */
   image-rendering: pixelated;
-  image-rendering: crisp-edges;
   pointer-events: none; /* GDD 4.1: the CRT is output only */
 }
 .crt-wrap canvas.overlay {
