@@ -1,1 +1,317 @@
-/* dashboard.css — GDD 4.1 */
+/* dashboard.css — GDD 4.1 lane, sensors, controls, debrief. Raw M1 styling. */
+
+/* ---------------------------------------------------------------- lane */
+.lane {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18% 1fr;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  touch-action: none;
+}
+.lane-contact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 59, 59, 0.18);
+  border-right: 3px solid var(--red);
+  color: var(--red);
+  font-size: 11px;
+  letter-spacing: 1px;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+.lane-track {
+  position: relative;
+  overflow: hidden;
+}
+.chip {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translate3d(0, 0, 0);
+  margin-top: -20px;
+  width: 64px;
+  height: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-2);
+  border: 2px solid var(--text-dim);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 11px;
+  will-change: transform;
+}
+.chip-glyph {
+  font-size: 16px;
+  line-height: 1;
+}
+.chip-worm .chip-glyph {
+  color: var(--magenta);
+}
+.chip.armed {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+}
+.chip.hardened {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+.chip.in-contact {
+  border-color: var(--grey);
+  color: var(--grey);
+  box-shadow: none;
+}
+.lane-hints {
+  position: absolute;
+  right: 6px;
+  top: 2px;
+  display: flex;
+  gap: 10px;
+  font-size: 10px;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+.lane-freeze {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 59, 59, 0.35);
+  color: #fff;
+  font-weight: bold;
+  font-size: 20px;
+  letter-spacing: 3px;
+  pointer-events: none;
+  animation: freeze-pulse 200ms infinite alternate;
+}
+.lane-freeze-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 6px;
+  background: var(--red);
+  width: 100%;
+}
+.lane.frozen .lane-freeze {
+  display: flex;
+}
+@keyframes freeze-pulse {
+  from {
+    background: rgba(255, 59, 59, 0.25);
+  }
+  to {
+    background: rgba(255, 59, 59, 0.5);
+  }
+}
+
+/* ------------------------------------------------------------ tolerance */
+.tolerance-wrap {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.tolerance-bar {
+  height: 100%;
+  min-height: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.tolerance-fill {
+  height: 100%;
+  background: var(--green);
+  transition: width 120ms linear;
+}
+.tolerance-bar.warn .tolerance-fill {
+  background: var(--amber);
+}
+.tolerance-bar.critical .tolerance-fill {
+  background: var(--red);
+  animation: flicker 160ms infinite alternate;
+}
+@keyframes flicker {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.45;
+  }
+}
+
+/* -------------------------------------------------------------- sensors */
+.sensors {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 4px;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  padding: 4px 6px;
+}
+.meters {
+  width: 100%;
+  height: 100%;
+}
+.meters text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--text-dim);
+}
+.jitter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.jitter-bar {
+  flex: 1;
+  height: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.jitter-fill {
+  height: 100%;
+  background: var(--amber);
+  transition: width 200ms linear;
+}
+.jitter-value {
+  min-width: 52px;
+  text-align: right;
+}
+
+/* ------------------------------------------------------------- controls */
+.controls {
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  padding: 6px 8px;
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  gap: 4px;
+  font-size: 12px;
+}
+.control-row {
+  display: grid;
+  grid-template-columns: 64px 1fr 56px;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+}
+.control-row.disabled {
+  opacity: 0.35;
+}
+.control-track {
+  height: 6px;
+  background: var(--panel-2);
+  border-radius: 3px;
+  position: relative;
+}
+.control-knob {
+  position: absolute;
+  top: -5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transform: translateX(-50%);
+}
+.heat-value {
+  color: var(--text);
+  font-weight: bold;
+  text-align: right;
+}
+.control-row .heat-fill {
+  height: 100%;
+  background: var(--amber);
+  border-radius: 3px;
+}
+
+/* --------------------------------------------------------------- footer */
+.footer {
+  display: flex;
+  gap: 8px;
+}
+.btn {
+  flex: 1;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 6px;
+  cursor: pointer;
+}
+.btn:active {
+  background: var(--line);
+}
+.btn.primary {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.btn[disabled] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* -------------------------------------------------------------- debrief */
+.debrief {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  overflow-y: auto;
+}
+.debrief h1 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 3px;
+}
+.debrief p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.debrief-chart {
+  width: 100%;
+  height: 220px;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+}
+.debrief-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.legend-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.debrief-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+.debrief-build {
+  font-size: 10px;
+  color: var(--grey);
+}

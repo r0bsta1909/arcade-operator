@@ -68,13 +68,13 @@ Arbeite die Schritte in dieser Reihenfolge ab. Hake sie hier ab. Halte an jedem 
 
 ## Schritt 6 — Dashboard & Layout (roh)
 
-- [ ] `styles/tokens.css`, `styles/layout.css` — Portrait-Layout nach GDD 4.1 mit den Höhenanteilen; Landscape ab 1024 px CRT links, Panel rechts. Kein Feinschliff.
-- [ ] `dashboard/FlowMeters.ts` — zwei Nadeln (FRUST, BORED) als SVG mit Kanalband.
-- [ ] `dashboard/ToleranceBar.ts`, `dashboard/JitterBar.ts`, Hitze als Textzahl.
-- [ ] CRT nimmt keine Pointer-Events an (`pointer-events: none` auf beiden Canvases; Touch wird vom Container geloggt und zeigt 600 ms einen Pfeil zur Lane).
-- [ ] Game-Over-Screens: Text unterscheidet Frust ("PLAYER 1 LEFT") und Langeweile ("INSERT COIN"). Sieg: "NEW HIGH SCORE" ohne Initialen-Animation.
-- [ ] `debrief/DebriefScreen.ts` — zwei Polylines (frustration, boredom) über die Session, Kanalband, Marker für Tode und greifende Gnaden, Button "Nochmal", Button "Feedback".
-- [ ] Commit: `feat(dashboard): raw portrait layout, meters, debrief`.
+- [x] `styles/tokens.css`, `styles/layout.css` — Portrait-Layout nach GDD 4.1 mit den Höhenanteilen; Landscape ab 1024 px CRT links, Panel rechts. Kein Feinschliff.
+- [x] `dashboard/FlowMeters.ts` — zwei Nadeln (FRUST, BORED) als SVG mit Kanalband.
+- [x] `dashboard/ToleranceBar.ts`, `dashboard/JitterBar.ts`, Hitze als Textzahl.
+- [x] CRT nimmt keine Pointer-Events an (`pointer-events: none` auf beiden Canvases; Touch wird vom Container geloggt und zeigt 600 ms einen Pfeil zur Lane).
+- [x] Game-Over-Screens: Text unterscheidet Frust ("PLAYER 1 LEFT") und Langeweile ("INSERT COIN"). Sieg: "NEW HIGH SCORE" ohne Initialen-Animation.
+- [x] `debrief/DebriefScreen.ts` — zwei Polylines (frustration, boredom) über die Session, Kanalband, Marker für Tode und greifende Gnaden, Button "Nochmal", Button "Feedback".
+- [x] Commit: `feat(dashboard): raw portrait layout, meters, debrief`.
 
 **STOPP 2 — Erster Gerätetest.** `bun run dev --host`, Rob spielt am Handy im lokalen Netz. Warte auf: fühlt sich Scharfen wie eine Entscheidung an, ist das Rückwirk-Fenster erreichbar, wird die Lane verstanden. Anpassungen aus diesem Test vor Schritt 7.
 

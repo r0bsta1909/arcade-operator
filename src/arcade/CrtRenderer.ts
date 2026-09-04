@@ -12,9 +12,9 @@ export const PALETTE = {
 
 export interface CrtFrameOptions {
   /** 0..1 progress of the death freeze rolling bar; undefined = not frozen. */
-  freezeProgress?: number;
+  freezeProgress?: number | undefined;
   /** Centered message (e.g. "PLAYER 1 READY"). */
-  message?: string;
+  message?: string | undefined;
 }
 
 export class CrtRenderer {
