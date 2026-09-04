@@ -1,9 +1,14 @@
 // Frustration/boredom leaky integrators, tolerance, channel, jitter. Knows only events. GDD 2.3.
 // M1 subset: death (serial, near-highscore), near-miss (+ delayed relief),
-// safe-streak boredom, new segment, score milestone. Suspicion is M2 and stays 0.
+// safe-streak boredom, new segment, score milestone. Suspicion (GDD 2.4) was
+// pulled into M1 after STOPP 2: mercy deltas, retro timing, double mercy,
+// floor ratchet; honest deaths never lower it.
 import { MS_PER_FRAME } from '../core/Clock';
 import { SessionConfig as C } from '../session/SessionConfig';
 import type { EndReason, GameEvent } from '../session/events';
+
+/** Only Suspicion events leave the engine; the runner forwards them to the bus. */
+export type SuspicionEvent = Extract<GameEvent, { type: 'Suspicion' }>;
 import type { Profile } from './Profiles';
 
 export interface PsycheState {
@@ -31,8 +36,14 @@ export class HumanPsychologyEngine {
   private reliefRemaining = 0;
   private reliefFramesLeft = 0;
   private frame = 0;
+  private lastMercyFrame = -Infinity;
+  /** Latched when suspicion reaches max, so the same-frame decay cannot hide the abort. */
+  private suspicionMaxed = false;
 
-  constructor(private readonly profile: Profile) {
+  constructor(
+    private readonly profile: Profile,
+    private readonly emit: (event: SuspicionEvent) => void = () => {},
+  ) {
     this.state = {
       frustration: 0,
       boredom: 0,
@@ -63,7 +74,8 @@ export class HumanPsychologyEngine {
       }
       case 'NearMiss':
         this.bump(p.nearMiss.frust, p.nearMiss.bored);
-        this.reliefRemaining = p.nearMiss.reliefFrust;
+        // GDD 2.3: above 50 suspicion the relief is halved ("I could not have died anyway").
+        this.reliefRemaining = this.state.suspicion > C.suspicion.halvesReliefAbove ? p.nearMiss.reliefFrust / 2 : p.nearMiss.reliefFrust;
         this.reliefFramesLeft = p.nearMiss.reliefMs / MS_PER_FRAME;
         this.safeStreak = 0;
         break;
@@ -79,6 +91,20 @@ export class HumanPsychologyEngine {
       case 'ScoreMilestone':
         this.bump(p.milestone.frust, p.milestone.bored);
         break;
+      case 'MercyApplied': {
+        const s = C.suspicion;
+        const d = Math.abs(event.deltaMs);
+        const inc = d > s.mercyHighDeltaMs ? s.mercyHigh : d > s.mercyMidDeltaMs ? s.mercyMid : s.mercyLow;
+        this.suspect(inc, 'mercy');
+        this.doubleMercy(frame);
+        break;
+      }
+      case 'RetroMercy': {
+        const s = C.suspicion;
+        this.suspect(event.msAfterDeath <= s.retroEarlyMs ? s.retroEarly : s.retroLate, 'retro');
+        this.doubleMercy(frame);
+        break;
+      }
       default:
         break;
     }
@@ -100,6 +126,9 @@ export class HumanPsychologyEngine {
       this.reliefFramesLeft--;
     }
 
+    // GDD 2.4: decays 1/s but never below the session floor.
+    s.suspicion = Math.max(s.suspicionFloor, s.suspicion - C.suspicion.decayPerSec * dt);
+
     const overFrust = s.frustration - s.channel.frustMax;
     const overBored = s.boredom - s.channel.boreMax;
     const excess = Math.max(overFrust, overBored);
@@ -118,10 +147,27 @@ export class HumanPsychologyEngine {
     return this.state.frustration < this.state.channel.frustMax && this.state.boredom < this.state.channel.boreMax;
   }
 
-  /** Abort reason once tolerance is gone, by the axis with the larger overshoot. GDD 2.5. */
+  /** Abort reason: suspicion at max (GDD 2.1) or tolerance gone, by the axis with the larger overshoot. GDD 2.5. */
   abortReason(): EndReason | null {
+    if (this.suspicionMaxed) return 'ABORT_SUSPECT';
     if (this.state.tolerance > 0) return null;
     return this.dominantAxis();
+  }
+
+  /** GDD 2.4: raise suspicion (scaled by profile sensitivity) and ratchet the floor. */
+  private suspect(amount: number, cause: 'mercy' | 'retro' | 'double'): void {
+    const s = this.state;
+    const inc = amount * this.profile.suspicionSensitivity;
+    s.suspicion = Math.min(C.suspicion.max, s.suspicion + inc);
+    if (s.suspicion >= C.suspicion.max) this.suspicionMaxed = true;
+    s.suspicionFloor = Math.min(C.suspicion.max, s.suspicionFloor + inc * C.suspicion.floorRatio);
+    if (inc >= C.suspicion.noticedAt) this.bump(C.psych.mercyNoticed.frust, C.psych.mercyNoticed.bored);
+    this.emit({ type: 'Suspicion', value: round1(s.suspicion), floor: round1(s.suspicionFloor), delta: round1(inc), cause });
+  }
+
+  private doubleMercy(frame: number): void {
+    if (frame - this.lastMercyFrame <= C.suspicion.doubleWindowMs / MS_PER_FRAME) this.suspect(C.suspicion.doubleExtra, 'double');
+    this.lastMercyFrame = frame;
   }
 
   /** Which axis is "more over" its threshold right now. Used for the abort flavour after the last life too. */
@@ -136,6 +182,10 @@ export class HumanPsychologyEngine {
     s.frustration = clamp01(s.frustration + (frust > 0 ? frust * this.profile.frustMult : frust));
     s.boredom = clamp01(s.boredom + (bored > 0 ? bored * this.profile.boredMult : bored));
   }
+}
+
+function round1(n: number): number {
+  return Math.round(n * 10) / 10;
 }
 
 function clamp01(v: number): number {

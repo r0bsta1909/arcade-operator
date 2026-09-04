@@ -46,7 +46,8 @@ export type GameEvent =
   | { type: 'CrtTouch'; x: number; y: number }
   // --- session ---
   | { type: 'StateChange'; from: GameState; to: GameState }
-  | { type: 'PsycheSample'; frustration: number; boredom: number; tolerance: number; jitter: number; skill: number }
+  | { type: 'Suspicion'; value: number; floor: number; delta: number; cause: 'mercy' | 'retro' | 'double' }
+  | { type: 'PsycheSample'; frustration: number; boredom: number; tolerance: number; jitter: number; skill: number; suspicion: number }
   | { type: 'SessionEnd'; reason: EndReason; cause: EndCause; score: number; durationMs: number };
 
 export type GameEventType = GameEvent['type'];

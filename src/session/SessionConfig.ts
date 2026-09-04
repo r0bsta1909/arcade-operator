@@ -34,8 +34,8 @@ export const SessionConfig = {
   pointsPerEnemy: 100, // GDD 3: worm jumped over
   pointsPerSegment: 500, // GDD 3
   scoreMilestone: 1000, // GDD 2.3: reward event every 1000 points
-  /** GDD 6 / M1: victory at 3000 (12000 in the full game, GDD 2.5). */
-  victoryScore: 3000,
+  /** GDD 6 / M1: victory at 3000 (12000 in the full game, GDD 2.5). Raised to 4500 after STOPP 2 so suspicion and boredom have time to act. */
+  victoryScore: 4500,
   lives: 3, // GDD 2.5
   /** CONTINUE countdown in ms after the last life. GDD 2.2 (Free Credit is M2). */
   continueMs: 9000,
@@ -115,6 +115,30 @@ export const SessionConfig = {
     streakBoredPerJump: 0.06,
     newSegment: { frust: 0, bored: -0.1 },
     milestone: { frust: -0.05, bored: -0.12 },
+  },
+  /** GDD 2.4 suspicion with floor ratchet (pulled into M1 after STOPP 2). */
+  suspicion: {
+    max: 100,
+    decayPerSec: 1,
+    /** Each suspicious event raises the session floor by this share of its increase. */
+    floorRatio: 0.3,
+    /** Mercy applied at |delta| > 120 ms: the guest knows he missed. */
+    mercyHighDeltaMs: 120,
+    mercyHigh: 25,
+    mercyMidDeltaMs: 60,
+    mercyMid: 10,
+    mercyLow: 3,
+    /** Retroactive mercy 0-150 ms after death vs later. */
+    retroEarlyMs: 150,
+    retroEarly: 15,
+    retroLate: 35,
+    /** Two applied mercies within this window add extra suspicion. */
+    doubleWindowMs: 10000,
+    doubleExtra: 15,
+    /** Increases at or above this count as 'Gnade bemerkt' (GDD 2.3: +0.10 frust, +0.05 bored). */
+    noticedAt: 10,
+    /** GDD 2.3: above this suspicion the near-miss relief is halved. */
+    halvesReliefAbove: 50,
   },
   /** PsycheSample is logged every N frames for the debrief curves. */
   psycheSampleEveryFrames: 30,

@@ -5,6 +5,8 @@
 // Geometry notes (see Physics.ts): the hopper jump covers 36 px. A crater of
 // width 36 has exactly the timing window as tolerance; narrower craters are
 // easier. Worms 8x8 are easy, 8x12 and 12x12 tighten the window.
+// Calibration after STOPP 2: 34-36 px craters (100 ms) were a coin flip for the
+// casual guest and every bot died there; segment 2 now tops out at 32 px (133 ms).
 import type { HazardType } from '../session/events';
 
 export interface HazardDef {
@@ -40,18 +42,18 @@ export const SEGMENTS: readonly SegmentDef[] = [
   {
     name: 'OCEANUS PROCELLARUM',
     hazards: [
-      { atMeter: 12, type: 'worm', width: 12, height: 12 },
-      { atMeter: 24, type: 'crater', width: 32 },
-      { atMeter: 36, type: 'crater', width: 34 },
-      { atMeter: 48, type: 'worm', width: 8, height: 12 },
-      { atMeter: 58, type: 'crater', width: 36 },
-      { atMeter: 70, type: 'worm', width: 12, height: 12 },
-      { atMeter: 82, type: 'crater', width: 34 },
-      { atMeter: 94, type: 'crater', width: 36 },
-      { atMeter: 106, type: 'worm', width: 8, height: 12 },
-      { atMeter: 116, type: 'crater', width: 36 },
-      { atMeter: 128, type: 'worm', width: 12, height: 12 },
-      { atMeter: 140, type: 'crater', width: 36 },
+      { atMeter: 12, type: 'worm', width: 8, height: 12 },
+      { atMeter: 24, type: 'crater', width: 28 },
+      { atMeter: 36, type: 'crater', width: 30 },
+      { atMeter: 48, type: 'worm', width: 12, height: 12 },
+      { atMeter: 58, type: 'crater', width: 32 },
+      { atMeter: 70, type: 'worm', width: 8, height: 12 },
+      { atMeter: 82, type: 'crater', width: 30 },
+      { atMeter: 94, type: 'crater', width: 32 },
+      { atMeter: 106, type: 'worm', width: 12, height: 12 },
+      { atMeter: 116, type: 'crater', width: 30 },
+      { atMeter: 128, type: 'worm', width: 8, height: 12 },
+      { atMeter: 140, type: 'crater', width: 32 },
     ],
   },
 ];

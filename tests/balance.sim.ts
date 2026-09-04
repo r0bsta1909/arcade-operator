@@ -73,10 +73,10 @@ const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.l
 const pct = (x: number, n: number) => `${((100 * x) / n).toFixed(0)} %`;
 
 function table(rows: Array<[string, Stats]>): string {
-  const head = '| Bot | n | Sieg | Frust-Abbruch | Langeweile-Abbruch | davon Leben weg | Dauer Ø / Median (s) | Score Ø | Tode Ø | Gnaden Ø |';
-  const sep = '|---|---|---|---|---|---|---|---|---|---|';
+  const head = '| Bot | n | Sieg | Frust-Abbruch | Langeweile-Abbruch | Verdachts-Abbruch | davon Leben weg | Dauer Ø / Median (s) | Score Ø | Tode Ø | Gnaden Ø |';
+  const sep = '|---|---|---|---|---|---|---|---|---|---|---|';
   const lines = rows.map(([name, s]) =>
-    `| ${name} | ${s.n} | ${pct(s.wins, s.n)} | ${pct(s.reasons.ABORT_FRUST, s.n)} | ${pct(s.reasons.ABORT_BORED, s.n)} | ${pct(s.causes.lives, s.n)} | ${mean(s.durations).toFixed(0)} / ${median(s.durations).toFixed(0)} | ${mean(s.scores).toFixed(0)} | ${mean(s.deaths).toFixed(1)} | ${mean(s.mercies).toFixed(1)} |`,
+    `| ${name} | ${s.n} | ${pct(s.wins, s.n)} | ${pct(s.reasons.ABORT_FRUST, s.n)} | ${pct(s.reasons.ABORT_BORED, s.n)} | ${pct(s.reasons.ABORT_SUSPECT, s.n)} | ${pct(s.causes.lives, s.n)} | ${mean(s.durations).toFixed(0)} / ${median(s.durations).toFixed(0)} | ${mean(s.scores).toFixed(0)} | ${mean(s.deaths).toFixed(1)} | ${mean(s.mercies).toFixed(1)} |`,
   );
   return [head, sep, ...lines].join('\n');
 }

@@ -66,7 +66,7 @@ export class SessionRunner {
     this.manip = new ManipulationLayer(this.bus);
     this.game = new FakeArcadeGame(this.bus, this.manip);
     this.agent = new HumanAgent(root.fork('human'), profile);
-    this.psyche = new HumanPsychologyEngine(profile);
+    this.psyche = new HumanPsychologyEngine(profile, (e) => this.bus.emit(e));
     this.states = new GameStateManager(this.bus);
     this.heat = new HeatSystem(this.bus);
     this.bus.onAny((e) => this.psyche.apply(e, this.frame));
@@ -139,12 +139,13 @@ export class SessionRunner {
         tolerance: round3(p.tolerance),
         jitter: round3(p.jitter),
         skill: round3(p.skill),
+        suspicion: Math.round(p.suspicion),
       });
     }
     const abort = this.psyche.abortReason();
     if (abort) {
       st.transition(abort, this.frame);
-      this.end(abort, 'tolerance');
+      this.end(abort, abort === 'ABORT_SUSPECT' ? 'suspicion' : 'tolerance');
     }
   }
 

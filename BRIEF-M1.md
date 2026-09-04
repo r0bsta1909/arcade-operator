@@ -115,6 +115,6 @@ Arbeite die Schritte in dieser Reihenfolge ab. Hake sie hier ab. Halte an jedem 
 
 ## Scope-Bremse (was in M1 NICHT gebaut wird)
 
-Verdacht · ~~Overheat~~ (nach STOPP 2 auf Robs Entscheidung in M1 vorgezogen) · Hitbox-Shrink · Bullet-Time · Slider · Free Credit · Profile außer Casual · Sonden · Meteoriten · Segmente 3–8 · CRT-Scanlines/Wölbung · Audio · Initialen-Animation · Mikrofon-Texte · Tutorial · PWA · Rate-Limit aktiv (Code ja, Phase `friends`).
+~~Verdacht~~ (Minimalfassung nach GDD 2.4 nach STOPP 2 vorgezogen) · ~~Overheat~~ (nach STOPP 2 auf Robs Entscheidung in M1 vorgezogen) · Hitbox-Shrink · Bullet-Time · Slider · Free Credit · Profile außer Casual · Sonden · Meteoriten · Segmente 3–8 · CRT-Scanlines/Wölbung · Audio · Initialen-Animation · Mikrofon-Texte · Tutorial · PWA · Rate-Limit aktiv (Code ja, Phase `friends`).
 
 Wenn du merkst, dass du etwas davon "nur schnell" mitbauen willst: nicht. Notiere es in `feedback/backlog.md` und mach weiter.

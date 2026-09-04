@@ -31,7 +31,8 @@ export class DebriefScreen {
     const lastFrame = Math.max(1, log.all().at(-1)?.f ?? 1);
     const x = (f: number) => PAD + ((W - 2 * PAD) * f) / lastFrame;
     const y = (v: number) => PAD + (H - 2 * PAD) * (1 - v);
-    const poly = (key: 'frustration' | 'boredom') => samples.map((s) => `${x(s.f).toFixed(1)},${y(s.e[key]).toFixed(1)}`).join(' ');
+    const poly = (key: 'frustration' | 'boredom' | 'suspicion', scale = 1) =>
+      samples.map((s) => `${x(s.f).toFixed(1)},${y(s.e[key] / scale).toFixed(1)}`).join(' ');
 
     const deaths = log.filter('Death').map((d) => `<circle cx="${x(d.f).toFixed(1)}" cy="${y(0.98).toFixed(1)}" r="5" fill="#ff3b3b"><title>${de.debrief.legendDeath} ${d.e.deltaMs} ms</title></circle>`);
     const mercies = [...log.filter('MercyApplied'), ...log.filter('RetroMercy')].map(
@@ -59,11 +60,13 @@ export class DebriefScreen {
         <line x1="${PAD}" y1="${y(C.channelFrustMax).toFixed(1)}" x2="${W - PAD}" y2="${y(C.channelFrustMax).toFixed(1)}" stroke="#3ddc84" stroke-dasharray="4 4"/>
         <polyline points="${poly('frustration')}" fill="none" stroke="#ff3b3b" stroke-width="2"/>
         <polyline points="${poly('boredom')}" fill="none" stroke="#4da3ff" stroke-width="2"/>
+        <polyline points="${poly('suspicion', 100)}" fill="none" stroke="#ffb300" stroke-width="2" stroke-dasharray="3 3"/>
         ${deaths.join('')}${mercies.join('')}
       </svg>
       <div class="debrief-legend">
         <span><i class="legend-swatch" style="background:#ff3b3b"></i>${de.debrief.legendFrust}</span>
         <span><i class="legend-swatch" style="background:#4da3ff"></i>${de.debrief.legendBored}</span>
+        <span><i class="legend-swatch" style="background:#ffb300"></i>${de.debrief.legendSuspect}</span>
         <span><i class="legend-swatch" style="background:#ff3b3b;border-radius:50%"></i>${de.debrief.legendDeath}</span>
         <span><i class="legend-swatch" style="background:#00e5ff"></i>${de.debrief.legendMercy}</span>
       </div>
