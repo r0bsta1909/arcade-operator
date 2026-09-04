@@ -5,6 +5,7 @@ export const de = {
     hintUp: '↑ Gnade',
     hintDown: '↓ Veto',
     freeze: 'VETO!',
+    overheat: (s: number) => `OVERHEAT ${s.toFixed(1)} s`,
     chip: { crater: 'Krater', worm: 'Wurm', probe: 'Sonde', meteor: 'Meteorit' },
     /** Shown on a chip once its hazard is resolved. */
     outcome: { alone: 'ALLEIN GESCHAFFT', mercy: 'GNADE GRIFF', expired: 'GNADE VERFALLEN', dead: 'TOT', retro: 'ZURÜCKGEHOLT' },
@@ -17,6 +18,7 @@ export const de = {
       'Der Gast spielt selbst und macht Fehler. Jeder Chip auf der Lane ist ein Hindernis, das gleich kommt.',
       'Wisch auf dem Chip nach oben, bevor er die rote Zone erreicht: Dann fängt die Maschine einen verpassten Sprung heimlich auf.',
       'Stirbt er doch, pulsiert die Lane 400 ms rot. Wisch nach oben nimmt den Tod zurück. Wisch nach unten macht es schwerer, falls er sich langweilt.',
+      'Jeder Eingriff heizt die Maschine auf. Bei 100 % Hitze ist sie 3 Sekunden blockiert. Hilf nur, wenn es nötig ist.',
     ],
     start: 'Münze rein',
     help: '?',

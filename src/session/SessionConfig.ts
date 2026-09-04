@@ -59,16 +59,19 @@ export const SessionConfig = {
   laneLookaheadFrames: 120,
 
   // ------------------------------------------------------------------ heat
-  // GDD 2.1 / 2.2. M1: number only, no overheat.
+  // GDD 2.1 / 2.2. Overheat pulled into M1 after STOPP 2 (Rob, 2026-09-05): without a cost, arming everything wins.
   heatArm: 20,
   heatMercyApplied: 10,
   heatHarden: 15,
   heatRetroMercy: 35,
   heatDecayPerSec: 8,
+  /** GDD 2.1: at 100 heat the machine locks for 3 s, no interventions. */
+  heatMax: 100,
+  overheatLockMs: 3000,
 
   // ----------------------------------------------------------------- guest
   /** Base timing error sigma in ms at skill 0. GDD 3: sigma = f(1 - skill, frustration). Calibrated M1: 110 => passive loses 77 %, 120 => 85 %, 130 => 90 %. */
-  sigmaBaseMs: 100,
+  sigmaBaseMs: 120,
   /** Extra sigma factor per unit frustration (tilt spiral). Start value. */
   jitterGain: 1.5,
   /** Systematic bias in ms (positive = jumps late). Casual guests tend to jump late. Start value. */

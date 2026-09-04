@@ -6,7 +6,7 @@ import type { ManipulationLayer } from '../arcade/ManipulationLayer';
 import type { PsycheState } from '../human/HumanPsychologyEngine';
 import { de } from '../i18n/de';
 import { FlowMeters } from './FlowMeters';
-import { HazardLane, type LaneFreeze } from './HazardLane';
+import { HazardLane, type LaneFreeze, type LaneOverheat } from './HazardLane';
 import { JitterBar } from './JitterBar';
 import { ToleranceBar } from './ToleranceBar';
 
@@ -69,8 +69,10 @@ export class Dashboard {
     this.introStart = this.q('button.intro-start');
   }
 
-  update(hazards: readonly HazardView[], manip: ManipulationLayer, freeze: LaneFreeze | null, psyche: PsycheState, heat: number): void {
-    this.lane.update(hazards, manip, freeze);
+  update(hazards: readonly HazardView[], manip: ManipulationLayer, freeze: LaneFreeze | null, psyche: PsycheState, heat: number, overheat: LaneOverheat | null): void {
+    this.lane.update(hazards, manip, freeze, overheat);
+    this.heatFill.classList.toggle('locked', overheat !== null);
+    this.heatFill.classList.toggle('hot', overheat === null && heat >= 70);
     this.meters.update(psyche);
     this.tolerance.update(psyche.tolerance);
     this.jitter.update(psyche.jitter);

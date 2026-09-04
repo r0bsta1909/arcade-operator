@@ -176,6 +176,7 @@ export class SessionRunner {
 
   private applyCommand(cmd: OperatorCommand): void {
     const st = this.states;
+    if (this.heat.locked) return; // GDD 2.1: overheat = no interventions
     if (cmd.action === 'retroMercy') {
       if (!st.inDeathFreeze) return;
       this.bus.emit({ type: 'OperatorAction', action: 'retroMercy', effect: 'revived' });

@@ -19,6 +19,10 @@ const FLASH_MS = 450;
 
 export type ChipOutcome = keyof typeof de.lane.outcome;
 
+export interface LaneOverheat {
+  msLeft: number;
+}
+
 export interface LaneFreeze {
   /** 0..1 elapsed share of the death freeze. */
   progress: number;
@@ -29,6 +33,7 @@ export class HazardLane {
   private readonly track: HTMLElement;
   private readonly freezeBar: HTMLElement;
   private readonly flash: HTMLElement;
+  private readonly overheat: HTMLElement;
   private chips = new Map<string, HTMLElement>();
   private outcomes = new Map<string, { until: number }>();
   private ids: string[] = [];
@@ -42,10 +47,12 @@ export class HazardLane {
       <div class="lane-track"></div>
       <div class="lane-hints"><span>${de.lane.hintUp}</span><span>${de.lane.hintDown}</span></div>
       <div class="lane-flash"></div>
+      <div class="lane-overheat"></div>
       <div class="lane-freeze"><div class="lane-freeze-bar"></div><span>${de.lane.freeze}</span></div>`;
     this.track = this.root.querySelector<HTMLElement>('.lane-track')!;
     this.freezeBar = this.root.querySelector<HTMLElement>('.lane-freeze-bar')!;
     this.flash = this.root.querySelector<HTMLElement>('.lane-flash')!;
+    this.overheat = this.root.querySelector<HTMLElement>('.lane-overheat')!;
   }
 
   /** Hazard ids currently displayed, front chip first. Used by keyboard input. */
@@ -73,7 +80,7 @@ export class HazardLane {
     this.flashTimer = window.setTimeout(() => this.flash.classList.remove('show'), FLASH_MS);
   }
 
-  update(hazards: readonly HazardView[], manip: ManipulationLayer, freeze: LaneFreeze | null): void {
+  update(hazards: readonly HazardView[], manip: ManipulationLayer, freeze: LaneFreeze | null, overheat: LaneOverheat | null = null): void {
     const width = this.track.clientWidth || 1;
     const now = performance.now();
     const seen = new Set<string>();
@@ -114,6 +121,8 @@ export class HazardLane {
       this.outcomes.delete(id);
     }
 
+    this.root.classList.toggle('overheated', overheat !== null);
+    if (overheat) this.overheat.textContent = de.lane.overheat(overheat.msLeft / 1000);
     this.root.classList.toggle('frozen', freeze !== null);
     if (freeze) this.freezeBar.style.width = `${Math.max(0, 1 - freeze.progress) * 100}%`;
   }

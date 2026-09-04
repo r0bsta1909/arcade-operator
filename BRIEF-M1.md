@@ -60,7 +60,7 @@ Arbeite die Schritte in dieser Reihenfolge ab. Hake sie hier ab. Halte an jedem 
 ## Schritt 5 — Operator & Hazard-Lane
 
 - [x] `operator/OperatorActions.ts` — `arm(hazardId)`, `veto(hazardId)`, `retroMercy()`. `veto` auf gescharften Chip = aufheben, sonst = Härte.
-- [x] `operator/HeatSystem.ts` — Hitze +20 beim Scharfen, +10 wenn greift, +15 Härte, +35 Rückwirk, −8/s. In M1 nur als Zahl, kein Overheat.
+- [x] `operator/HeatSystem.ts` — Hitze +20 beim Scharfen, +10 wenn greift, +15 Härte, +35 Rückwirk, −8/s. ~~In M1 nur als Zahl, kein Overheat.~~ Overheat (100 → 3 s Sperre) nach STOPP 2 vorgezogen.
 - [x] `operator/OperatorInput.ts` — Pointer-Events. Swipe: ≥ 40 px, ≤ 250 ms, vertikal dominant. `pointer-capture` auf der Lane. Tastatur: `W`/`S`/Pfeile auf vordersten Chip, `1`–`3` wählen.
 - [x] `operator/LatencyProbe.ts` — misst `Death`-Event → `pointerup` des Rückwirk-Swipes in ms; loggt `LatencySample(ms)`. Loggt jeden `pointerdown` auf dem CRT-Canvas als `CrtTouch`.
 - [x] `dashboard/HazardLane.ts` — Chips als DOM-Elemente, Position via CSS-Transform aus `framesUntilCritical`, Kontaktzone rot, gescharft cyan, in Kontaktzone grau. Death-Freeze: Lane pulsiert rot mit ablaufendem Balken.
@@ -115,6 +115,6 @@ Arbeite die Schritte in dieser Reihenfolge ab. Hake sie hier ab. Halte an jedem 
 
 ## Scope-Bremse (was in M1 NICHT gebaut wird)
 
-Verdacht · Overheat · Hitbox-Shrink · Bullet-Time · Slider · Free Credit · Profile außer Casual · Sonden · Meteoriten · Segmente 3–8 · CRT-Scanlines/Wölbung · Audio · Initialen-Animation · Mikrofon-Texte · Tutorial · PWA · Rate-Limit aktiv (Code ja, Phase `friends`).
+Verdacht · ~~Overheat~~ (nach STOPP 2 auf Robs Entscheidung in M1 vorgezogen) · Hitbox-Shrink · Bullet-Time · Slider · Free Credit · Profile außer Casual · Sonden · Meteoriten · Segmente 3–8 · CRT-Scanlines/Wölbung · Audio · Initialen-Animation · Mikrofon-Texte · Tutorial · PWA · Rate-Limit aktiv (Code ja, Phase `friends`).
 
 Wenn du merkst, dass du etwas davon "nur schnell" mitbauen willst: nicht. Notiere es in `feedback/backlog.md` und mach weiter.

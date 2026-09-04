@@ -81,7 +81,7 @@ const loop = new GameLoop({
     const upcoming = runner.game.getUpcomingHazards(3);
     crt.render(snap, { freezeProgress, message: crtMessage(), marks, nextHazardId: upcoming[0]?.id });
     overlay.render(snap, runner.prediction());
-    dashboard.update(upcoming, runner.manip, frozen && freezeProgress !== undefined ? { progress: freezeProgress } : null, runner.psyche.state, runner.heat.value);
+    dashboard.update(upcoming, runner.manip, frozen && freezeProgress !== undefined ? { progress: freezeProgress } : null, runner.psyche.state, runner.heat.value, runner.heat.locked ? { msLeft: runner.heat.lockMsLeft } : null);
 
     if (runner.ended && runner.result && ++endScreenFrames >= END_SCREEN_FRAMES) {
       // Hold the end screen for a moment, then debrief.

@@ -40,6 +40,8 @@ export type GameEvent =
   // --- operator ---
   | { type: 'OperatorAction'; action: OperatorActionKind; hazardId?: string; effect: OperatorEffect }
   | { type: 'Heat'; value: number }
+  | { type: 'Overheat'; lockMs: number }
+  | { type: 'OverheatEnd' }
   | { type: 'LatencySample'; ms: number }
   | { type: 'CrtTouch'; x: number; y: number }
   // --- session ---

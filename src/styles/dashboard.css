@@ -432,3 +432,32 @@
 .btn.help {
   flex: 0 0 44px;
 }
+
+/* ------------------------------------------------------------ overheat */
+.lane-overheat {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(90, 92, 104, 0.75);
+  color: var(--amber);
+  font-weight: bold;
+  font-size: 18px;
+  letter-spacing: 3px;
+  pointer-events: none;
+}
+.lane.overheated .lane-overheat {
+  display: flex;
+}
+.lane.overheated .chip {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+.heat-fill.hot {
+  background: var(--red);
+}
+.heat-fill.locked {
+  background: var(--red);
+  animation: flicker 160ms infinite alternate;
+}
