@@ -65,7 +65,7 @@ describe('physics / segments', () => {
     const game = new FakeArcadeGame(bus, new ManipulationLayer(bus));
     for (let f = 0; f < 60 * 45 && !game.victory; f++) {
       const next = game.getUpcomingHazards(1)[0];
-      const jump = next !== undefined && next.framesUntilCritical <= 0.5 && game.hopper.mode === 'grounded';
+      const jump = next !== undefined && Math.abs(next.framesUntilCritical) <= 0.5 && game.hopper.mode === 'grounded';
       game.tick(jump ? { jump: true } : null);
     }
     expect(events.filter((e) => e.type === 'Death')).toHaveLength(0);

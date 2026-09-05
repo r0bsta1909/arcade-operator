@@ -35,7 +35,7 @@ export const SessionConfig = {
   pointsPerSegment: 500, // GDD 3
   scoreMilestone: 1000, // GDD 2.3: reward event every 1000 points
   /** GDD 6 / M1: victory at 3000 (12000 in the full game, GDD 2.5). Raised to 4500 after STOPP 2 so suspicion and boredom have time to act. */
-  victoryScore: 4500,
+  victoryScore: 6000,
   lives: 3, // GDD 2.5
   /** CONTINUE countdown in ms after the last life. GDD 2.2 (Free Credit is M2). */
   continueMs: 9000,
@@ -99,7 +99,7 @@ export const SessionConfig = {
     miss: 10,
     /** GDD 2.2: +10 when mercy actually applies. */
     mercyApplied: 10,
-    decayPerSec: 5,
+    decayPerSec: 8,
     /** GDD 2.1: at max the machine locks for overheatLockMs, no interventions. */
     max: 100,
   },
@@ -145,14 +145,14 @@ export const SessionConfig = {
     mercyNoticed: { frust: 0.1, bored: 0.05 },
     /** Boredom per safe jump once the streak reaches the threshold. GDD start values 5 / 0.06 never bored anyone in a 45 s round; calibrated after STOPP 2 to 3 / 0.14 (passive veteran leaves bored in 89 %, heuristic bot keeps him in 51 %). */
     streakThreshold: 3,
-    streakBoredPerJump: 0.14,
+    streakBoredPerJump: 0.08,
     newSegment: { frust: 0, bored: -0.1 },
     milestone: { frust: -0.05, bored: -0.12 },
   },
   /** GDD 2.4 suspicion with floor ratchet (pulled into M1 after STOPP 2). */
   suspicion: {
     max: 100,
-    decayPerSec: 1,
+    decayPerSec: 8,
     /** Each suspicious event raises the session floor by this share of its increase. */
     floorRatio: 0.3,
     /** Mercy applied at |delta| > 120 ms: the guest knows he missed. */
@@ -166,7 +166,7 @@ export const SessionConfig = {
     retroEarly: 15,
     retroLate: 35,
     /** Two applied mercies within this window add extra suspicion. */
-    doubleWindowMs: 10000,
+    doubleWindowMs: 4000,
     doubleExtra: 15,
     /** Increases at or above this count as 'Gnade bemerkt' (GDD 2.3: +0.10 frust, +0.05 bored). */
     noticedAt: 10,

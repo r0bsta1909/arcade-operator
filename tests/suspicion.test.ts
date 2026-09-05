@@ -26,10 +26,10 @@ describe('suspicion (GDD 2.4)', () => {
     expect(e.state.suspicion).toBe(S.mercyLow);
   });
 
-  it('two mercies within 10 s add +15 extra', () => {
+  it('two mercies within the double window add +15 extra', () => {
     const e = new HumanPsychologyEngine(neutral);
     e.apply(mercy('a', 20), 100);
-    e.apply(mercy('b', 20), 100 + 5 * 60);
+    e.apply(mercy('b', 20), 100 + (S.doubleWindowMs / 1000 - 1) * 60);
     expect(e.state.suspicion).toBe(2 * S.mercyLow + S.doubleExtra);
   });
 
