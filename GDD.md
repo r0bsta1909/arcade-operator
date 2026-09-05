@@ -24,7 +24,7 @@
 1. **Unsichtbare Wirkung.** Manipulationen sind für den Gast unsichtbar, müssen für den Spieler aber ≤ 100 ms lesbar sein. Jede Manipulation hat ein Dashboard-Feedback.
 2. **Drei Game-Over-Arten müssen sich verschieden anfühlen.** Frust: schnell, laut, Faustschlag. Langeweile: langsam, leise, Schritte entfernen sich. Verdacht: Klopfen, Münzrückgabe.
 3. **Der simulierte Gast ist das eigentliche Spiel.** Verdeckte Profile + Rauschen erzeugen die Undurchschaubarkeit, nicht Modellkomplexität. Mehr verdeckte Achsen würden die Lesbarkeit (H2, H4) verschlechtern.
-4. **Reaktionszeit.** Wahlreaktion + Geste liegen bei 350–500 ms. Deshalb ist Gnade keine Reaktion, sondern eine Vorentscheidung (Scharfen) mit Last-Frame-Veto. Reaktiv bleibt nur das rückwirkende Fenster, das der klassische Arcade-Death-Freeze diegetisch abdeckt.
+4. **Reaktionszeit.** Wahlreaktion + Geste liegen bei 350–500 ms. v0.2 machte Gnade deshalb zur Vorentscheidung (Scharfen). Nach dem Gerätetest (M1 STOPP 2, 2026-09-05) ist Gnade ein **getimter Hit**: Der Chip wandert 2 s lang sichtbar zur Linie, die Entscheidung *ob* fällt vorher, die Geste selbst ist ein Rhythmus-Hit wie in Guitar Hero. Die Trefferqualität (PERFECT/GOOD/LATE/MISS) ist die Kosten-Skala. Das rückwirkende Fenster (Death-Freeze) ist der LATE-Hit.
 5. **Verdeckung.** Auf 6 Zoll verdeckt die Hand beim Tippen das Spielfeld. Deshalb ist der CRT reine Ausgabe; alle Interaktion läuft über die Hazard-Lane darunter.
 
 ---
@@ -56,15 +56,32 @@ Meta-Schleife: Der Gast lernt (Skill steigt), der Spieler muss die Schwierigkeit
 | **Hitze** (0–100) | Manipulationsbudget. Bei 100 → Overheat: 3 s keine Eingriffe, Lüfter heult. | −8/s passiv |
 | **Verdacht** (0–100) | Gefühl des Gastes, das Spiel sei "kaputt" oder unfair leicht. Bei 100 → sofortiger Abbruch. | −1/s passiv, **nie unter den Verdachts-Boden** (2.4). Ehrliche Tode senken Verdacht nicht mehr. |
 
-### 2.2 Interaktion (Hazard-Lane-Modell)
+### 2.2 Interaktion (Hazard-Lane-Modell, getimte Hits)
 
-Der CRT ist reine Ausgabe. Alle Gesten finden auf der **Hazard-Lane** statt — ein Streifen direkt unter dem CRT, durch den die nächsten drei Hindernisse als Chips von rechts nach links wandern, synchron zum Scrolling. Ein Chip erreicht die **Kontaktzone** (linker Rand, rot markiert) exakt im kritischen Frame.
+Der CRT ist reine Ausgabe. Alle Gesten finden auf der **Hazard-Lane** statt — ein Streifen direkt unter dem CRT, durch den die nächsten drei Hindernisse als Chips von rechts nach links wandern, synchron zum Scrolling. Ein Chip erreicht die **Hit-Linie** (linker Rand, rot markiert) exakt im kritischen Frame = idealer Absprung des Gastes. Hindernisse kommen im Takt von 0,8 s (6 m). Das Tempo zieht pro Segment um 10 % an, bis 1,4× (über `Clock.timeScale`; die Hit-Fenster sind in Simulations-ms definiert und werden in Echtzeit enger).
+
+*Geändert nach M1 STOPP 2 (2026-09-05), Robs Urteil: „zu wenig Guitar Hero, größtenteils zu passiv.“ v0.2 scharfte Gnade vorab per Wisch auf den Chip; das verlangte kein Timing und ließ grüne Chips ohne Eingabe. Jetzt ist jede Geste ein Hit auf der Linie, bewertet nach Timing:*
+
+| Urteil | Fenster (Sim-ms um den kritischen Frame) | Wisch hoch = Gnade | Wisch runter = Härte | Hitze | Verdacht |
+|---|---|---|---|---|---|
+| **PERFECT** | ±50 ms | greift, wenn nötig | Fenster wird auf genau 20 ms Abstand zum geplanten Sprung getrimmt ⇒ gefühlter Beinahe-Tod, kein Tod | 10 | +3 |
+| **GOOD** | ±150 ms | greift, wenn nötig | Fenster 40 ms (kann töten) | 20 / 15 | nach Timing-Delta (2.4) |
+| **LATE** | bis 400 ms nach dem Tod (Death-Freeze) | rückwirkende Rettung | — | 35 | +15 / +35 (2.4 Rückwirk) |
+| **MISS** | sonst | nichts | nichts | 10 | 0 |
+
+Gnade, die nicht nötig war (der Gast hätte es allein geschafft): „GNADE (UNNÖTIG)“, Hitze verbraucht, Combo bleibt. Greift Gnade, zusätzlich +10 Hitze.
+
+**Combo und Operator-Score (live):** Ein *nötiger* PERFECT/GOOD-Hit (Gnade bei rotem Chip, Härte bei Langeweile über der halben Kanalschwelle) erhöht die Combo; MISS und ein nicht zurückgenommener Tod setzen sie auf 0. Multiplikator = 1 + ⌊Combo/5⌋, maximal 4. Punkte PERFECT 100, GOOD 50, LATE 20, jeweils × Multiplikator. Der Operator-Score aus 2.6 bleibt die Debrief-Kennzahl.
+
+**Maschinen-Sicht:** Sobald der Gast seinen Sprung geplant hat (2 s vor dem Hindernis), zeigt der Chip einen Punkt: rot pulsierend = stirbt ohne Hilfe, grün = kommt durch. Ein Gnade-Hit färbt ihn sofort um, wenn die Gnade reicht.
 
 **Operator-Overlay (Pre-Signal):** 1 s vor dem kritischen Frame zeichnet eine Overlay-Ebene *über* dem CRT die Maschinen-Sicht auf den nächsten Sprung: den sicheren Landebereich als grünen Balken und die wahrscheinliche Landung des Gastes als Band (erwarteter Absprung ± eine Streuung σ), farbcodiert nach Todeswahrscheinlichkeit (grün < 20 %, bernstein < 50 %, rot ≥ 50 %). Das Band wird breiter, wenn der Gast zittert (Frust), und ist damit die sichtbare Form des JITTER-Werts. Die Overlay-Ebene ist nicht Teil des Fake-Games — der Gast sieht sie fiktional nicht.
 
 *Zweite Änderung nach STOPP 2:* Sobald der Gast sich entschieden hat (er plant seinen Sprung, wenn das Hindernis vorderster Chip wird), zeigt das Overlay **die Wahrheit**: seinen tatsächlichen Absprung als durchgezogene Kurve, grün oder rot, unter der aktuellen Manipulation. Der Chip auf der Lane trägt denselben Punkt: rot pulsierend = stirbt ohne Hilfe, grün = kommt durch. Scharfen färbt den Punkt sofort um, wenn die Gnade reicht. Das Band aus der Verteilung bleibt nur, solange der Gast noch nicht entschieden hat. Grund: Rob las das Wahrscheinlichkeits-Band als Vorhersage, und eine Vorhersage, die jedes zweite Mal „falsch“ ist, ist unlesbar. Die Entscheidung des Spielers verschiebt sich damit von „Wird er sterben?“ zu „Ist mir diese Rettung Hitze und Verdacht wert?“ — der Kern-Konflikt aus Abschnitt 0 bleibt.
 
 *Erste Änderung nach M1 STOPP 2 (2026-09-05):* v0.2 zeichnete einen einzelnen Geist-Sprung aus einem separaten Zufallsstrom, damit das Overlay „Schätzung, keine Wahrheit“ ist. Im Test zeigte der Geist grün, und der Gast starb — die Stichprobe hatte mit dem echten Sprung nichts zu tun und wurde als Lüge gelesen. Das Band zeigt die Verteilung statt einer Ziehung: ehrlich, ohne Orakel zu sein.
+
+*Gestentabelle v0.2 (historisch, Scharfen-Modell; Slider, Tap-Shrink, Long-Press und Free Credit gelten weiterhin für M2):*
 
 | Geste | Wo | Wirkung | Hitze | Verdacht |
 |---|---|---|---|---|
@@ -80,7 +97,7 @@ Der CRT ist reine Ausgabe. Alle Gesten finden auf der **Hazard-Lane** statt — 
 
 **PC-Mapping:** Swipe hoch/runter = `W`/`S` bzw. Pfeiltasten (wirken auf den vordersten Chip; `1`–`3` wählen Chip), Tap = Linksklick auf Chip, Long-Press = Leertaste halten, Slider = Mausrad, Münze = `C`.
 
-**Warum Scharfen statt Reaktion:** Die Entscheidung "beschütze ich ihn?" fällt mit 1–2 s Vorlauf bewusst. Die Reaktion im Todesmoment ist eine Einzelgeste ohne Dashboard-Blick — machbar in 400 ms. Gescharfte, nicht benötigte Gnade kostet Hitze ohne Nutzen; das ist der Preis für Vorsicht. Wer immer scharft, überhitzt; wer nie scharft, verlässt sich auf das teure Rückwirk-Fenster.
+**Warum getimter Hit statt Scharfen (ersetzt „Warum Scharfen statt Reaktion“):** Die Entscheidung *ob* fällt weiterhin mit 2 s Vorlauf, denn der Chip zeigt ab dann, ob der Gast stirbt. Die Geste selbst ist ein Rhythmus-Hit, dessen Qualität die Sichtbarkeit der Manipulation bestimmt: PERFECT ist unsichtbar, GOOD fällt auf, LATE ist ein Eingeständnis. Damit ist die Kernfrage aus Abschnitt 0 nicht mehr nur „helfe ich?“, sondern „helfe ich, und wie sauber?“. Wer jede Linie trifft, überhitzt; wer schlampig trifft, macht den Gast misstrauisch; wer nie trifft, verliert ihn an Frust oder Langeweile.
 
 ### 2.3 Flow-Messung: Frust und Langeweile als getrennte Achsen
 
@@ -127,6 +144,8 @@ Verdacht steigt bei:
 - Zwei greifende Gnaden innerhalb 10 s: +15 zusätzlich
 - Speed-Sprung statt Rampe (> 0,2× in < 1 s): +20
 
+**Trefferqualität (nach STOPP 2):** Eine PERFECT-Gnade zählt immer als „< 60 ms“ (+3), unabhängig vom Timing-Delta des Gastes; GOOD wird nach Delta bewertet; LATE nach der Rückwirk-Regel. Das Doppel-Gnade-Fenster ist 4 s (bei 0,8-s-Takt).
+
 **Verdachts-Boden:** Jedes verdächtige Ereignis hebt einen Session-Mindestwert um 30 % seines Zuwachses. Verdacht zerfällt mit −1/s, aber nie unter den Boden. Ehrliche Tode senken Verdacht *nicht* (v0.1-Regel gestrichen). Damit ist die "Opfer-Taktik" — Gast gezielt töten, um Verdacht abzubauen — wirkungslos; ein Härte-Tod kostet nur Leben und Frust.
 
 Endgame (≥ 90 % Highscore): Verdachts-Empfindlichkeit +30 %, weil der Gast konzentriert ist.
@@ -145,7 +164,7 @@ Endgame (≥ 90 % Highscore): Verdachts-Empfindlichkeit +30 %, weil der Gast kon
 1. Beide Kurven (Frust, Langeweile) über die Session mit Kanalband.
 2. Marker für jedes Scharfen, jede greifende Gnade, jedes Veto, jeden Tod — mit Timing-Delta.
 3. Profil-Reveal mit einem Satz: *"Der Veteran langweilt sich bei Streaks über 4 — du hast ihm 7 gegeben."*
-4. **Operator-Score:** Zeit im Kanal (%) × Highscore-Erreichung × (1 − Verdacht/100).
+4. **Operator-Score:** Zeit im Kanal (%) × Highscore-Erreichung × (1 − Verdacht/100). Dazu (nach STOPP 2) der Live-Score aus 2.2, die maximale Combo und die Verteilung der Urteile (PERFECT/GOOD/LATE/MISS).
 5. **Feedback-Button** (siehe 5.5) — der Debrief ist der primäre Feedback-Moment.
 
 ### 2.7 Testbarkeit
@@ -168,7 +187,7 @@ Endgame (≥ 90 % Highscore): Verdachts-Empfindlichkeit +30 %, weil der Gast kon
 **Regeln:**
 - Auto-Scrolling One-Button-Plattformer, Hopper rennt nach rechts. Einzige Gast-Eingabe: Sprung, feste Höhe.
 - Hindernisse: **Krater** (Lücke), **Mondwurm** (überspringen), **Sonde** (fliegt in Sprunghöhe — *nicht* springen), **Meteorit** (fällt, Schatten als Vorwarnung).
-- Punkte: +10/Meter, +100/Gegner, +500/Segment. 8 handgebaute Segmente à 20 s. Kein prozeduraler Zufall in M1–M3.
+- Punkte: +10/Meter, +100/Gegner, +500/Segment. 8 handgebaute Segmente à 20 s, ein Hindernis alle 6 m (0,8 s), Segmente als Beat-Muster notiert (`Segments.ts`, nach STOPP 2; v0.2: 10–14 m). Kein prozeduraler Zufall in M1–M3.
 - Drei Leben, Death-Freeze 400 ms, kein Continue außer Free Credit.
 
 **Der simulierte Gast** (`HumanAgent`): Sieht ein Hindernis, berechnet den idealen Sprungframe, addiert Fehler `N(bias, σ)` mit `σ = f(1 − skill, frustration)` — Tilt-Spirale. Erkennungsfehler bei Sonden: `p = (1 − skill) × 0,3`. Skill +`learnRate × 0,02` pro Segment. Der Agent kennt weder Manipulation noch Overlay.
@@ -284,9 +303,9 @@ operator/
 - **`FakeArcadeGame`** — `tick(dt, manip)`, `getUpcomingHazards(n=3): Hazard[]` (mit `framesUntilCritical`, `idealJumpFrame`), emittiert `Death`, `NearMiss(deltaMs)`, `SegmentCleared`, `ScoreMilestone`. Kennt den Gast nicht.
 - **`HumanAgent`** — `tick(dt, world, psyche): HumanInput | null`. Reine Funktion der Sicht. Liefert zusätzlich `jumpRisk(hazard): { expectedX, sigmaPx, safeMin, safeMax, deathProbability }` für das Overlay — deterministisch aus der Fehlerverteilung, kein eigener PRNG-Stream (geändert nach M1 STOPP 2, siehe 2.2).
 - **`HumanPsychologyEngine`** — `apply(event)`, `tick(dt)`, `state: { frustration, boredom, tolerance, suspicion, suspicionFloor, channel: { frustMax, boreMax }, skill, jitter }`.
-- **`ManipulationLayer`** — hält `ManipulationState` pro Hazard-ID (`armed`, `hardened`, `hitboxScale`) plus global (`windowMs`, `speedTarget`, `timeScale`). Berechnet Sichtbarkeit greifender Gnade → Verdacht.
+- **`ManipulationLayer`** — hält pro Hazard-ID `mercy` (mit Urteil) oder `windowOverride` (Härte, Fenster in ms, darf negativ sein = Hitbox wächst) plus global (`windowMs`, `speed`). Meldet greifende Gnade mit Urteil → Verdacht (2.4).
 - **`HazardLane`** — DOM-Komponente, bindet Chips an Hazard-IDs, nimmt Gesten entgegen, emittiert `OperatorAction` mit `hazardId`.
-- **`OperatorInput`** — Pointer-Events auf Lane und Regler; Swipe ≥ 28 px in ≤ 450 ms vertikal dominant (v0.2: 40 px / 250 ms, gelockert nach Gerätetest STOPP 2); Tap ≤ 200 ms; Long-Press ≥ 400 ms. Tastatur-Mapping.
+- **`OperatorInput`** — Pointer-Events auf der Lane; ein Swipe irgendwo auf der Lane ist ein Hit auf der Linie (hoch/runter), kein Chip-Ziel mehr; ≥ 28 px in ≤ 450 ms vertikal dominant (v0.2: 40 px / 250 ms, gelockert nach Gerätetest STOPP 2); Tap ≤ 200 ms; Long-Press ≥ 400 ms (M2). Tastatur W/S. Das Timing-Urteil fällt deterministisch in `SessionRunner` aus dem Frame, in dem das Kommando angewendet wird.
 - **`LatencyProbe`** — misst `Death`-Event → Swipe-Ende in ms, schreibt ins `SessionLog` (H5). Loggt außerdem Touches auf dem CRT (H6).
 - **`SessionLog`** — Append-only, Frame-nummeriert, serialisierbar. Enthält Seed, Profil, Config-Hash, alle Game- und Operator-Events, Latenzmessungen.
 

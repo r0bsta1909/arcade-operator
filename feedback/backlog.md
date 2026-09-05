@@ -32,3 +32,10 @@ Things noticed during M1 that are out of scope (see BRIEF-M1 Scope-Bremse).
 - Rob: Lane zu schmal, Wahrscheinlichkeits-Band unlesbar, Hoch-Spam ohne Konsequenz. Umgesetzt: Lane 22 %, Sensoren kompakt, Swipe 28 px / 450 ms; Maschinen-Sicht zeigt den geplanten Sprung (Wahrheit) auf CRT und Chip; Hitze 5/s Zerfall, 5 s Sperre. Gnädig-Bot gewinnt jetzt 27 % (Casual), Orakel-Bot 46 %.
 - Versteckte 1-Frame-Coyote-Zeit im Hopper entfernt (Spiel und Solver waren uneins). 
 - Offen: Ob die Wahrheits-Anzeige H1 (Zögern beim Scharfen) noch zulässt, entscheidet der Gerätetest. Falls zu leicht: Wahrheit erst ab 500 ms vor dem Sprung zeigen (Chip vorher neutral).
+
+## Aus M1 STOPP 2, „Guitar-Hero-Runde“ (2026-09-05)
+
+- Rob: „zu wenig Guitar Hero, größtenteils zu passiv.“ Entscheidung: Gnade/Härte als getimte Hits (PERFECT/GOOD/LATE/MISS), Combo und Live-Score, Hindernis alle 0,8 s, Tempo-Rampe bis 1,4×. GDD 0/2.2/2.4/2.6/3/5.3 geändert.
+- Orakel-Bot gewinnt beim Veteran 100 %: PERFECT-Härte ist ein garantierter Beinahe-Tod. Für Menschen mischt sich GOOD-Härte (tötet ~50 %) hinein; ob das reicht, zeigt der Gerätetest. Fallback: PERFECT-Fenster für Härte auf ±35 ms.
+- Passiv-Veteran geht nach 17 s gelangweilt. Beim dichten Takt evtl. zu schnell; Streak-Konstante nach Gerätetest prüfen.
+- Musik/Takt-Audio, Slider und Sonden bleiben M2/M3.
