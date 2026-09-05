@@ -32,9 +32,9 @@
   top: 50%;
   left: 0;
   transform: translate3d(0, 0, 0);
-  margin-top: -20px;
-  width: 64px;
-  height: 40px;
+  margin-top: -30px;
+  width: 76px;
+  height: 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -43,11 +43,41 @@
   border: 2px solid var(--text-dim);
   border-radius: var(--radius);
   color: var(--text);
-  font-size: 11px;
+  font-size: 12px;
   will-change: transform;
 }
+.chip-verdict {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: transparent;
+}
+.chip.will-die {
+  border-color: var(--red);
+  animation: die-pulse 500ms infinite alternate;
+}
+.chip.will-die .chip-verdict {
+  background: var(--red);
+}
+.chip.will-live .chip-verdict {
+  background: var(--green);
+}
+.chip.armed.will-live .chip-verdict {
+  box-shadow: 0 0 6px var(--cyan);
+}
+@keyframes die-pulse {
+  from {
+    box-shadow: 0 0 0 rgba(255, 59, 59, 0);
+  }
+  to {
+    box-shadow: 0 0 14px rgba(255, 59, 59, 0.9);
+  }
+}
 .chip-glyph {
-  font-size: 16px;
+  font-size: 20px;
   line-height: 1;
 }
 .chip-worm .chip-glyph {
@@ -153,7 +183,7 @@
 .sensors {
   display: grid;
   grid-template-rows: 1fr auto;
-  gap: 4px;
+  gap: 2px;
   background: var(--panel);
   border: 2px solid var(--line);
   border-radius: var(--radius);
@@ -197,11 +227,11 @@
   background: var(--panel);
   border: 2px solid var(--line);
   border-radius: var(--radius);
-  padding: 6px 8px;
+  padding: 4px 8px;
   display: grid;
   grid-template-rows: repeat(4, 1fr);
-  gap: 4px;
-  font-size: 12px;
+  gap: 2px;
+  font-size: 11px;
 }
 .control-row {
   display: grid;

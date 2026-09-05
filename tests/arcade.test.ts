@@ -129,3 +129,52 @@ describe('overlay risk band', () => {
     expect(calm.expectedX).toBeGreaterThan(h.baseRange.min - 40);
   });
 });
+
+describe('machine view tells the truth (STOPP 2)', () => {
+  it('the front chip verdict matches the actual outcome in every unmanipulated session', () => {
+    let checked = 0;
+    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+      const r = new SessionRunner({ seed, buildHash: 'test' });
+      const verdictAt = new Map<string, 'safe' | 'dead'>();
+      const outcome = new Map<string, 'safe' | 'dead'>();
+      r.bus.on('Death', (e) => outcome.set(e.hazardId, 'dead'));
+      r.bus.on('HazardCleared', (e) => outcome.set(e.hazardId, 'safe'));
+      r.bus.on('Respawn', () => {
+        verdictAt.clear();
+        outcome.clear(); // hazards ahead re-activate with a fresh plan
+      });
+      while (!r.ended) {
+        r.step();
+        for (const [id, v] of r.verdicts()) if (!verdictAt.has(id)) verdictAt.set(id, v);
+        for (const [id, v] of verdictAt) {
+          const o = outcome.get(id);
+          if (o) {
+            expect(v, `seed ${seed} hazard ${id}`).toBe(o);
+            verdictAt.delete(id);
+            checked++;
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(100);
+  });
+
+  it('arming a doomed chip turns its verdict green', () => {
+    for (let seed = 1; seed < 40; seed++) {
+      const r = new SessionRunner({ seed, profileId: 'casual', buildHash: 'test' });
+      let found = false;
+      while (!r.ended && !found) {
+        r.step();
+        const next = r.game.getUpcomingHazards(1)[0];
+        if (next && r.verdicts().get(next.id) === 'dead' && next.framesUntilCritical > 10) {
+          r.step([{ action: 'arm', hazardId: next.id }]);
+          const after = r.verdicts().get(next.id);
+          if (after === 'safe') found = true;
+          else break; // mercy could not save this one (too far off), try another seed
+        }
+      }
+      if (found) return;
+    }
+    throw new Error('no seed where arming flipped a verdict');
+  });
+});

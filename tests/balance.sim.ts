@@ -17,6 +17,15 @@ const BOTS: Record<string, Bot> = {
     if (next && !r.manip.isArmed(next.id) && next.framesUntilCritical <= 60) return [{ action: 'arm', hazardId: next.id }];
     return [];
   },
+  /** What a human with the truth display does: arm the front chip when it will die, unless suspicion is already high. */
+  oracle: (r) => {
+    if (r.states.inDeathFreeze && r.msSinceDeath() >= 150 && r.psyche.state.suspicion < 60) return [{ action: 'retroMercy' }];
+    const next = r.game.getUpcomingHazards(1)[0];
+    if (!next || r.manip.isArmed(next.id)) return [];
+    if (r.verdicts().get(next.id) === 'dead' && r.psyche.state.suspicion < 60) return [{ action: 'arm', hazardId: next.id }];
+    if (r.psyche.state.boredom > 0.35 && !r.manip.isHardened(next.id)) return [{ action: 'veto', hazardId: next.id }];
+    return [];
+  },
   /** GDD 5.4: arms at jitter > 0.3 (of full scale) and suspicion < 40, hardens at boredom > 0.35. */
   heuristic: (r) => {
     const next = r.game.getUpcomingHazards(1)[0];
@@ -102,7 +111,7 @@ const flag = (name: string) => {
 const smoke = args.includes('--smoke');
 const n = Number(flag('--n') ?? (smoke ? 50 : 1000));
 const seed0 = Number(flag('--seed') ?? 1);
-const botNames = (flag('--bots') ?? (smoke ? 'passive' : 'passive,merciful,heuristic')).split(',');
+const botNames = (flag('--bots') ?? (smoke ? 'passive' : 'passive,merciful,heuristic,oracle')).split(',');
 const profiles = (flag('--profiles')?.split(',') ?? ACTIVE_PROFILES) as ProfileId[];
 
 const t0 = Date.now();

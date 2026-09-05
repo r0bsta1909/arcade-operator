@@ -5,9 +5,11 @@ import { de } from '../i18n/de';
 import type { PsycheState } from '../human/HumanPsychologyEngine';
 
 const W = 300;
-const H = 132;
-const LEFT = 52;
-const RIGHT = W - 10;
+const H = 66;
+const LEFT = 58;
+const RIGHT = W - 8;
+const ROW_H = 12;
+const rowY = (i: number) => 6 + i * 21;
 
 export class FlowMeters {
   readonly root: SVGSVGElement;
@@ -19,21 +21,15 @@ export class FlowMeters {
   private readonly suspectFloor: SVGRectElement;
 
   constructor(container: HTMLElement) {
+    const row = (i: number, label: string, extra: string) => `
+        <text x="4" y="${rowY(i) + 10}">${label}</text>
+        <rect x="${LEFT}" y="${rowY(i)}" width="${RIGHT - LEFT}" height="${ROW_H}" fill="#1f2027" stroke="#2c2e38"/>
+        ${extra}`;
     container.innerHTML = `
       <svg class="meters" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-        <text x="4" y="30">${de.dashboard.frust}</text>
-        <rect x="${LEFT}" y="18" width="${RIGHT - LEFT}" height="16" fill="#1f2027" stroke="#2c2e38"/>
-        <rect class="band-frust" x="${LEFT}" y="18" width="0" height="16" fill="rgba(61,220,132,0.35)"/>
-        <line class="needle-frust" x1="${LEFT}" y1="14" x2="${LEFT}" y2="38" stroke="#ff3b3b" stroke-width="3"/>
-        <text x="4" y="72">${de.dashboard.bored}</text>
-        <rect x="${LEFT}" y="60" width="${RIGHT - LEFT}" height="16" fill="#1f2027" stroke="#2c2e38"/>
-        <rect class="band-bored" x="${LEFT}" y="60" width="0" height="16" fill="rgba(61,220,132,0.35)"/>
-        <line class="needle-bored" x1="${LEFT}" y1="56" x2="${LEFT}" y2="80" stroke="#4da3ff" stroke-width="3"/>
-        <text x="4" y="114">${de.dashboard.suspect}</text>
-        <rect x="${LEFT}" y="102" width="${RIGHT - LEFT}" height="16" fill="#1f2027" stroke="#2c2e38"/>
-        <rect x="${LEFT + (RIGHT - LEFT) * 0.7}" y="102" width="${(RIGHT - LEFT) * 0.3}" height="16" fill="rgba(255,59,59,0.3)"/>
-        <rect class="floor-suspect" x="${LEFT}" y="102" width="0" height="16" fill="rgba(255,179,0,0.25)"/>
-        <line class="needle-suspect" x1="${LEFT}" y1="98" x2="${LEFT}" y2="122" stroke="#ffb300" stroke-width="3"/>
+        ${row(0, de.dashboard.frust, `<rect class="band-frust" x="${LEFT}" y="${rowY(0)}" width="0" height="${ROW_H}" fill="rgba(61,220,132,0.35)"/><line class="needle-frust" x1="${LEFT}" y1="${rowY(0) - 3}" x2="${LEFT}" y2="${rowY(0) + ROW_H + 3}" stroke="#ff3b3b" stroke-width="3"/>`)}
+        ${row(1, de.dashboard.bored, `<rect class="band-bored" x="${LEFT}" y="${rowY(1)}" width="0" height="${ROW_H}" fill="rgba(61,220,132,0.35)"/><line class="needle-bored" x1="${LEFT}" y1="${rowY(1) - 3}" x2="${LEFT}" y2="${rowY(1) + ROW_H + 3}" stroke="#4da3ff" stroke-width="3"/>`)}
+        ${row(2, de.dashboard.suspect, `<rect x="${LEFT + (RIGHT - LEFT) * 0.7}" y="${rowY(2)}" width="${(RIGHT - LEFT) * 0.3}" height="${ROW_H}" fill="rgba(255,59,59,0.3)"/><rect class="floor-suspect" x="${LEFT}" y="${rowY(2)}" width="0" height="${ROW_H}" fill="rgba(255,179,0,0.25)"/><line class="needle-suspect" x1="${LEFT}" y1="${rowY(2) - 3}" x2="${LEFT}" y2="${rowY(2) + ROW_H + 3}" stroke="#ffb300" stroke-width="3"/>`)}
       </svg>`;
     this.root = container.querySelector('svg')!;
     this.frustNeedle = this.root.querySelector('.needle-frust')!;

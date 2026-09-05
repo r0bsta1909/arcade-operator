@@ -11,6 +11,7 @@ import type { Obstacle } from './Obstacle';
 import {
   deltaMs,
   hitsWorm,
+  survivesJumpFrom,
   marginMs,
   outsideMs,
   overGap,
@@ -241,6 +242,24 @@ export class FakeArcadeGame {
       if (out.length >= n) break;
     }
     return out;
+  }
+
+  /** Front-x at which the guest actually pressed for this hazard, if he already did. */
+  jumpFrontFor(hazardId: string): number | null {
+    return this.lastJump?.hazardId === hazardId ? this.lastJump.front : null;
+  }
+
+  /** Earliest front-x at which a press can still take off: now, or the landing point of the current jump. */
+  earliestTakeoffX(): number {
+    if (this.hopper.mode === 'airborne') return this.distance + (C.jumpFrames - this.hopper.jumpFrame) * this.speed;
+    return this.distance;
+  }
+
+  /** Would a jump taking off at `front` survive this hazard under the slack that currently applies to it? */
+  willSurvive(hazardId: string, front: number): boolean | null {
+    const o = this.obstacles.find((x) => x.id === hazardId);
+    if (!o) return null;
+    return survivesJumpFrom(front, o, this.manip.slackFor(o.id), this.speed);
   }
 
   /** Take-off range for a hazard under a slack; cached by slack signature. */

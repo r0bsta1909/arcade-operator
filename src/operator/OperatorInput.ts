@@ -11,8 +11,9 @@ export interface InputContext {
   inDeathFreeze(): boolean;
 }
 
-const SWIPE_MIN_PX = 40; // GDD 5.3
-const SWIPE_MAX_MS = 250; // GDD 5.3
+// GDD 5.3 said >= 40 px in <= 250 ms; loosened after the first device test (STOPP 2: swipes not detected).
+const SWIPE_MIN_PX = 28;
+const SWIPE_MAX_MS = 450;
 
 export class OperatorInput {
   private start: { x: number; y: number; t: number; chipId: string | null; pointerId: number } | null = null;

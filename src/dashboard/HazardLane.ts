@@ -80,7 +80,7 @@ export class HazardLane {
     this.flashTimer = window.setTimeout(() => this.flash.classList.remove('show'), FLASH_MS);
   }
 
-  update(hazards: readonly HazardView[], manip: ManipulationLayer, freeze: LaneFreeze | null, overheat: LaneOverheat | null = null): void {
+  update(hazards: readonly HazardView[], manip: ManipulationLayer, freeze: LaneFreeze | null, overheat: LaneOverheat | null = null, verdicts: ReadonlyMap<string, 'safe' | 'dead'> = new Map()): void {
     const width = this.track.clientWidth || 1;
     const now = performance.now();
     const seen = new Set<string>();
@@ -100,7 +100,7 @@ export class HazardLane {
         el.className = `chip chip-${h.type}`;
         el.dataset['hazardId'] = h.id;
         el.dataset['type'] = h.type;
-        el.innerHTML = `<span class="chip-glyph">${CHIP_GLYPH[h.type]}</span><span class="chip-label">${de.lane.chip[h.type]}</span>`;
+        el.innerHTML = `<span class="chip-verdict"></span><span class="chip-glyph">${CHIP_GLYPH[h.type]}</span><span class="chip-label">${de.lane.chip[h.type]}</span>`;
         this.track.appendChild(el);
         this.chips.set(h.id, el);
       }
@@ -111,6 +111,9 @@ export class HazardLane {
       el.classList.toggle('hardened', manip.isHardened(h.id));
       el.classList.toggle('in-contact', h.framesUntilCritical <= 0);
       el.classList.toggle('front', h === hazards[0]);
+      const v = verdicts.get(h.id);
+      el.classList.toggle('will-die', v === 'dead');
+      el.classList.toggle('will-live', v === 'safe');
     }
     for (const [id, el] of this.chips) {
       if (seen.has(id)) continue;

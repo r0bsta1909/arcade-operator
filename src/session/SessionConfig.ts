@@ -65,14 +65,15 @@ export const SessionConfig = {
 
   // ------------------------------------------------------------------ heat
   // GDD 2.1 / 2.2. Overheat pulled into M1 after STOPP 2 (Rob, 2026-09-05): without a cost, arming everything wins.
+  // Decay 8 -> 5 /s and lock 3 -> 5 s after the second device round: spamming mercy must lock the machine (merciful bot 42 % -> 35 % wins, oracle bot unchanged at 49 %).
   heatArm: 20,
   heatMercyApplied: 10,
   heatHarden: 15,
   heatRetroMercy: 35,
-  heatDecayPerSec: 8,
+  heatDecayPerSec: 5,
   /** GDD 2.1: at 100 heat the machine locks for 3 s, no interventions. */
   heatMax: 100,
-  overheatLockMs: 3000,
+  overheatLockMs: 5000,
 
   // ----------------------------------------------------------------- guest
   /** Base timing error sigma in ms at skill 0. GDD 3: sigma = f(1 - skill, frustration). Calibrated M1: 110 => passive loses 77 %, 120 => 85 %, 130 => 90 %. */
@@ -86,8 +87,8 @@ export const SessionConfig = {
   skillMax: 0.95,
   /** Dashboard JITTER bar is full at this sigma (ms). GDD 2.3. */
   jitterFullScaleMs: 200,
-  /** Frames of lookahead the guest uses to commit to a jump decision. */
-  guestReactionFrames: 20,
+  /** Frames before the ideal take-off at which the guest commits to a jump decision. Raised 20 -> 120 after STOPP 2 so the machine view can show the committed jump as soon as a chip becomes the front chip (GDD 2.2). */
+  guestReactionFrames: 120,
 
   // ------------------------------------------------------------- psychology
   // GDD 2.3, start values for the headless sim.

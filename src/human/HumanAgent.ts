@@ -39,6 +39,17 @@ export class HumanAgent {
     readonly profile: Profile,
   ) {}
 
+  /**
+   * The guest's committed take-off front-x for a hazard, or null if he has not
+   * decided yet. This is what the machine view shows (GDD 2.2, amended after
+   * STOPP 2: the overlay shows the committed jump, not a probability).
+   */
+  plannedTakeoffX(hazard: HazardView): number | null {
+    const plan = this.plans.get(hazard.id);
+    if (!plan || Math.abs(plan.idealJumpFrame - hazard.idealJumpFrame) > 2) return null;
+    return hazard.idealX + (plan.jumpFrame - plan.idealJumpFrame) * C.scrollPxPerFrame;
+  }
+
   sigmaMs(feel: GuestFeel): number {
     return timingSigmaMs(feel.skill, feel.frustration);
   }

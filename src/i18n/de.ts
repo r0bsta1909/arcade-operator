@@ -16,7 +16,7 @@ export const de = {
     title: 'DU BIST DER AUTOMAT',
     lines: [
       'Der Gast spielt selbst und macht Fehler. Jeder Chip auf der Lane ist ein Hindernis, das gleich kommt.',
-      'Wisch auf dem Chip nach oben, bevor er die rote Zone erreicht: Dann fängt die Maschine einen verpassten Sprung heimlich auf.',
+      'Ein rot pulsierender Chip heißt: Der Gast wird an diesem Hindernis sterben. Wisch auf dem Chip nach oben, bevor er die rote Zone erreicht, dann fängt die Maschine ihn heimlich auf und der Punkt wird grün.',
       'Stirbt er doch, pulsiert die Lane 400 ms rot. Wisch nach oben nimmt den Tod zurück. Wisch nach unten macht es schwerer, falls er sich langweilt.',
       'Jeder Eingriff heizt die Maschine auf. Bei 100 % Hitze ist sie 3 Sekunden blockiert.',
       'Greift Gnade bei einem klar verpassten Sprung, merkt der Gast es: Verdacht steigt und sinkt nie ganz zurück. Bei 100 geht er.',

@@ -5,7 +5,7 @@
 import { EventBus } from '../core/EventBus';
 import { MS_PER_FRAME } from '../core/Clock';
 import { Rng } from '../core/Rng';
-import { FakeArcadeGame } from '../arcade/FakeArcadeGame';
+import { FakeArcadeGame, type HazardView } from '../arcade/FakeArcadeGame';
 import { ManipulationLayer } from '../arcade/ManipulationLayer';
 import type { JumpPrediction } from '../arcade/OverlayRenderer';
 import { HumanAgent } from '../human/HumanAgent';
@@ -167,7 +167,37 @@ export class SessionRunner {
     if (!next) return null;
     if (next.framesUntilCritical * MS_PER_FRAME > C.overlayLeadMs) return null;
     if (next.framesUntilCritical < -C.jumpFrames) return null;
-    return this.agent.jumpRisk(next, this.psyche.state);
+    const risk = this.agent.jumpRisk(next, this.psyche.state);
+    const takeoff = this.committedTakeoff(next);
+    if (takeoff === null) return risk;
+    const survives = this.game.willSurvive(next.id, takeoff);
+    return survives === null ? risk : { ...risk, committed: { takeoffX: takeoff, survives } };
+  }
+
+  /**
+   * Where the guest's press for this hazard will (or did) take off: the actual
+   * press if it happened, else his plan, but never before the hopper can jump
+   * again (a press while airborne is held until landing).
+   */
+  private committedTakeoff(h: HazardView): number | null {
+    const actual = this.game.jumpFrontFor(h.id);
+    if (actual !== null) return actual;
+    const planned = this.agent.plannedTakeoffX(h);
+    if (planned === null) return null;
+    return Math.max(planned, this.game.earliestTakeoffX());
+  }
+
+  /** Per upcoming hazard: will the guest's committed jump survive under the current manipulation? Unknown = not committed. */
+  verdicts(): Map<string, 'safe' | 'dead'> {
+    const out = new Map<string, 'safe' | 'dead'>();
+    if (this.states.state !== 'PLAY') return out;
+    for (const h of this.game.getUpcomingHazards(3)) {
+      const planned = this.committedTakeoff(h);
+      if (planned === null) continue;
+      const s = this.game.willSurvive(h.id, planned);
+      if (s !== null) out.set(h.id, s ? 'safe' : 'dead');
+    }
+    return out;
   }
 
   /** Milliseconds since the current death freeze started (for the lane countdown / latency). */

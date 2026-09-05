@@ -49,13 +49,17 @@ export class Hopper {
         if (this.jumpFrame >= C.jumpFrames) {
           this.feetY = C.groundY;
           this.mode = hasSupport ? 'grounded' : 'falling';
-          this.fallFrames = 0;
+          this.fallFrames = hasSupport ? 0 : 1;
         }
         return false;
       case 'grounded':
         if (!hasSupport) {
+          // The frame support is lost already counts as a fall frame, so a jump
+          // in that frame needs coyote time >= 1. Keeps the live game consistent
+          // with Physics.survivesJumpFrom (no hidden one-frame coyote).
           this.mode = 'falling';
-          this.fallFrames = 0;
+          this.fallFrames = 1;
+          this.feetY = C.groundY + 2;
         }
         return false;
       case 'falling':

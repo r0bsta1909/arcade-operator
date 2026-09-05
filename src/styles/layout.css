@@ -27,10 +27,11 @@ body {
   display: none !important;
 }
 
-/* Portrait: CRT 36 %, tolerance 4 %, lane 12 %, sensors 14 %, controls 18 %, footer 6 % */
+/* Portrait (GDD 4.1 shares, re-weighted after STOPP 2: the lane is the gesture zone and needs thumb room):
+   CRT 34 %, tolerance 3 %, lane 22 %, sensors 11 %, controls 10 %, footer 6 % */
 .game {
   display: grid;
-  grid-template-rows: 36fr 4fr 12fr 14fr 18fr 6fr;
+  grid-template-rows: 34fr 3fr 22fr 11fr 10fr 6fr;
   grid-template-areas: 'crt' 'tolerance' 'lane' 'sensors' 'controls' 'footer';
   gap: 4px;
   padding: 4px;
@@ -98,7 +99,7 @@ body {
 @media (min-width: 1024px) and (orientation: landscape) {
   .game {
     grid-template-columns: 55fr 45fr;
-    grid-template-rows: 12fr 6fr 24fr 30fr 8fr;
+    grid-template-rows: 22fr 4fr 20fr 18fr 8fr;
     grid-template-areas:
       'crt lane'
       'crt tolerance'

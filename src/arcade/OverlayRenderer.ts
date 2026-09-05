@@ -25,6 +25,8 @@ export interface JumpPrediction {
   safeMax: number;
   deathProbability: number;
   outcome: PredictedOutcome;
+  /** Once the guest has committed: his actual take-off and whether it survives under the current manipulation. */
+  committed?: { takeoffX: number; survives: boolean } | undefined;
 }
 
 const MARKER_COLOR: Record<PredictedOutcome, string> = {
@@ -68,7 +70,26 @@ export class OverlayRenderer {
     g.globalAlpha = 1;
     g.fillRect(toScreen(p.expectedX + jump) - C.hopperWidth, C.groundY - 6, C.hopperWidth, 4);
 
-    // Ghost parabola from the expected take-off.
+    // Committed jump: the truth. Solid parabola + solid marker, green or red.
+    if (p.committed) {
+      const c = p.committed.survives ? MARKER_COLOR.safe : MARKER_COLOR.dead;
+      g.strokeStyle = c;
+      g.lineWidth = 1.5;
+      g.beginPath();
+      for (let f = 0; f <= C.jumpFrames; f++) {
+        const x = toScreen(p.committed.takeoffX + f * s.speed);
+        const y = jumpFeetY(f) - C.hopperHeight / 2;
+        if (f === 0) g.moveTo(x, y);
+        else g.lineTo(x, y);
+      }
+      g.stroke();
+      g.fillStyle = c;
+      g.fillRect(toScreen(p.committed.takeoffX + jump) - C.hopperWidth, C.groundY - 10, C.hopperWidth, 4);
+      g.restore();
+      return;
+    }
+
+    // Not committed yet: dashed ghost from the expected take-off.
     g.strokeStyle = color;
     g.lineWidth = 1;
     g.setLineDash([2, 2]);

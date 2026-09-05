@@ -62,7 +62,9 @@ Der CRT ist reine Ausgabe. Alle Gesten finden auf der **Hazard-Lane** statt — 
 
 **Operator-Overlay (Pre-Signal):** 1 s vor dem kritischen Frame zeichnet eine Overlay-Ebene *über* dem CRT die Maschinen-Sicht auf den nächsten Sprung: den sicheren Landebereich als grünen Balken und die wahrscheinliche Landung des Gastes als Band (erwarteter Absprung ± eine Streuung σ), farbcodiert nach Todeswahrscheinlichkeit (grün < 20 %, bernstein < 50 %, rot ≥ 50 %). Das Band wird breiter, wenn der Gast zittert (Frust), und ist damit die sichtbare Form des JITTER-Werts. Die Overlay-Ebene ist nicht Teil des Fake-Games — der Gast sieht sie fiktional nicht.
 
-*Änderung nach M1 STOPP 2 (2026-09-05):* v0.2 zeichnete einen einzelnen Geist-Sprung aus einem separaten Zufallsstrom, damit das Overlay „Schätzung, keine Wahrheit“ ist. Im Test zeigte der Geist grün, und der Gast starb — die Stichprobe hatte mit dem echten Sprung nichts zu tun und wurde als Lüge gelesen. Das Band zeigt die Verteilung statt einer Ziehung: ehrlich, ohne Orakel zu sein.
+*Zweite Änderung nach STOPP 2:* Sobald der Gast sich entschieden hat (er plant seinen Sprung, wenn das Hindernis vorderster Chip wird), zeigt das Overlay **die Wahrheit**: seinen tatsächlichen Absprung als durchgezogene Kurve, grün oder rot, unter der aktuellen Manipulation. Der Chip auf der Lane trägt denselben Punkt: rot pulsierend = stirbt ohne Hilfe, grün = kommt durch. Scharfen färbt den Punkt sofort um, wenn die Gnade reicht. Das Band aus der Verteilung bleibt nur, solange der Gast noch nicht entschieden hat. Grund: Rob las das Wahrscheinlichkeits-Band als Vorhersage, und eine Vorhersage, die jedes zweite Mal „falsch“ ist, ist unlesbar. Die Entscheidung des Spielers verschiebt sich damit von „Wird er sterben?“ zu „Ist mir diese Rettung Hitze und Verdacht wert?“ — der Kern-Konflikt aus Abschnitt 0 bleibt.
+
+*Erste Änderung nach M1 STOPP 2 (2026-09-05):* v0.2 zeichnete einen einzelnen Geist-Sprung aus einem separaten Zufallsstrom, damit das Overlay „Schätzung, keine Wahrheit“ ist. Im Test zeigte der Geist grün, und der Gast starb — die Stichprobe hatte mit dem echten Sprung nichts zu tun und wurde als Lüge gelesen. Das Band zeigt die Verteilung statt einer Ziehung: ehrlich, ohne Orakel zu sein.
 
 | Geste | Wo | Wirkung | Hitze | Verdacht |
 |---|---|---|---|---|
@@ -187,7 +189,7 @@ Endgame (≥ 90 % Highscore): Verdachts-Empfindlichkeit +30 %, weil der Gast kon
 │ └──────────────────────────┘ │
 │ ▓▓▓▓▓▓▓▓░░░░░░  TOLERANCE    │  ← Rissbalken, 4 %
 ├──────────────────────────────┤
-│ ▌KONTAKT│ ◆wurm  ○krater  ▲sonde  ← HAZARD-LANE, 12 % Höhe
+│ ▌KONTAKT│ ◆wurm  ○krater  ▲sonde  ← HAZARD-LANE, 22 % Höhe (v0.2: 12 %, nach STOPP 2 vergrößert; Sensoren 11 %, Regler 10 %)
 │ ▌  ZONE │  cyan   grau           │     Chips wandern nach links
 │         │ ↑ Gnade  ↓ Veto  · Tap │     einzige Gesten-Zone oben
 ├──────────────────────────────┤
@@ -284,7 +286,7 @@ operator/
 - **`HumanPsychologyEngine`** — `apply(event)`, `tick(dt)`, `state: { frustration, boredom, tolerance, suspicion, suspicionFloor, channel: { frustMax, boreMax }, skill, jitter }`.
 - **`ManipulationLayer`** — hält `ManipulationState` pro Hazard-ID (`armed`, `hardened`, `hitboxScale`) plus global (`windowMs`, `speedTarget`, `timeScale`). Berechnet Sichtbarkeit greifender Gnade → Verdacht.
 - **`HazardLane`** — DOM-Komponente, bindet Chips an Hazard-IDs, nimmt Gesten entgegen, emittiert `OperatorAction` mit `hazardId`.
-- **`OperatorInput`** — Pointer-Events auf Lane und Regler; Swipe ≥ 40 px in ≤ 250 ms vertikal dominant; Tap ≤ 200 ms; Long-Press ≥ 400 ms. Tastatur-Mapping.
+- **`OperatorInput`** — Pointer-Events auf Lane und Regler; Swipe ≥ 28 px in ≤ 450 ms vertikal dominant (v0.2: 40 px / 250 ms, gelockert nach Gerätetest STOPP 2); Tap ≤ 200 ms; Long-Press ≥ 400 ms. Tastatur-Mapping.
 - **`LatencyProbe`** — misst `Death`-Event → Swipe-Ende in ms, schreibt ins `SessionLog` (H5). Loggt außerdem Touches auf dem CRT (H6).
 - **`SessionLog`** — Append-only, Frame-nummeriert, serialisierbar. Enthält Seed, Profil, Config-Hash, alle Game- und Operator-Events, Latenzmessungen.
 

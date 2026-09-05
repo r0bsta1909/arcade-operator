@@ -26,3 +26,9 @@ Things noticed during M1 that are out of scope (see BRIEF-M1 Scope-Bremse).
 - Overlay zeigte einen Zufalls-Geist (GDD 5.3) → als Lüge gelesen. Jetzt Risiko-Band aus der Fehlerverteilung. GDD 2.2/5.3 geändert.
 - Verdacht (GDD 2.4) in M1, Casual-Empfindlichkeit 1,0. Sieg bei 4.500 statt 3.000, Segment 2 auf 32-px-Krater gedeckelt (100-ms-Fenster waren für jeden Bot tödlich).
 - Veteran aktiv. Beinahe-Tod gefühlt relativ zu σ; Streak-Langeweile 3 / 0,14. Offen: Tilter und Kind, sinkende Kanalschwellen, Sonden/Meteoriten (M2).
+
+## Aus M1 STOPP 2, vierte Runde (2026-09-05)
+
+- Rob: Lane zu schmal, Wahrscheinlichkeits-Band unlesbar, Hoch-Spam ohne Konsequenz. Umgesetzt: Lane 22 %, Sensoren kompakt, Swipe 28 px / 450 ms; Maschinen-Sicht zeigt den geplanten Sprung (Wahrheit) auf CRT und Chip; Hitze 5/s Zerfall, 5 s Sperre. Gnädig-Bot gewinnt jetzt 27 % (Casual), Orakel-Bot 46 %.
+- Versteckte 1-Frame-Coyote-Zeit im Hopper entfernt (Spiel und Solver waren uneins). 
+- Offen: Ob die Wahrheits-Anzeige H1 (Zögern beim Scharfen) noch zulässt, entscheidet der Gerätetest. Falls zu leicht: Wahrheit erst ab 500 ms vor dem Sprung zeigen (Chip vorher neutral).
