@@ -1,5 +1,5 @@
 // Same seed + same operator inputs => identical SessionLog hash. Sacred (CLAUDE.md).
-// GDD 5.1. Runs the real SessionRunner with a scripted operator.
+// GDD 5.1. Runs the real SessionRunner with a scripted operator (timed hits).
 import { describe, expect, it } from 'vitest';
 import { Rng } from '../src/core/Rng';
 import { SessionLog } from '../src/session/SessionLog';
@@ -9,30 +9,28 @@ interface ScriptedInput extends OperatorCommand {
   frame: number;
 }
 
-/** 'front' resolves to the front chip at that frame; still a pure function of (seed, script). */
 function run(seed: number, script: readonly ScriptedInput[]): SessionLog {
   const runner = new SessionRunner({ seed, buildHash: 'test' });
-  return runner.runToEnd((r) =>
-    script
-      .filter((s) => s.frame === r.frame)
-      .map((s) => (s.hazardId === 'front' ? { ...s, hazardId: r.game.getUpcomingHazards(1)[0]?.id ?? 'none' } : s)),
-  );
+  return runner.runToEnd((r) => script.filter((s) => s.frame === r.frame));
 }
 
-/** Operator that arms the front chip every 90 frames and always vetoes death. Deterministic by construction. */
+/** Operator that hits up on the line whenever the front chip is doomed and hits down on every 7th frame that crosses a line. Deterministic by construction. */
 function reactivePolicy(r: SessionRunner): OperatorCommand[] {
-  if (r.states.inDeathFreeze && r.msSinceDeath() >= 200) return [{ action: 'retroMercy' }];
+  if (r.states.inDeathFreeze && r.msSinceDeath() >= 200) return [{ action: 'hitUp' }];
   const next = r.game.getUpcomingHazards(1)[0];
-  if (r.frame % 90 === 0 && next) return [{ action: 'arm', hazardId: next.id }];
+  if (!next || Math.abs(next.framesUntilCritical) > 0.5) return [];
+  if (r.verdicts().get(next.id) === 'dead') return [{ action: 'hitUp' }];
+  if (r.frame % 7 === 0) return [{ action: 'hitDown' }];
   return [];
 }
 
-// Frames chosen so every command targets a hazard that is upcoming at that time (PLAY starts at frame 61).
+// Fixed frames: some land as PERFECT/GOOD, some as MISS, some inside a freeze. All are logged.
 const script: ScriptedInput[] = [
-  { frame: 70, action: 'arm', hazardId: 'front' },
-  { frame: 75, action: 'veto', hazardId: 'front' },
-  { frame: 400, action: 'arm', hazardId: 'front' },
-  { frame: 403, action: 'veto', hazardId: 'front' },
+  { frame: 120, action: 'hitUp' },
+  { frame: 200, action: 'hitDown' },
+  { frame: 400, action: 'hitUp' },
+  { frame: 700, action: 'hitUp' },
+  { frame: 1000, action: 'hitDown' },
 ];
 
 describe('determinism', () => {
@@ -40,7 +38,7 @@ describe('determinism', () => {
     const a = run(1234, script);
     const b = run(1234, script);
     expect(a.length).toBeGreaterThan(20);
-    expect(a.filter('OperatorAction').length).toBeGreaterThanOrEqual(2); // some frames may fall into a freeze
+    expect(a.filter('OperatorAction').length).toBeGreaterThanOrEqual(3);
     expect(a.hash()).toBe(b.hash());
     expect(JSON.stringify(a.toJSON())).toBe(JSON.stringify(b.toJSON()));
   });

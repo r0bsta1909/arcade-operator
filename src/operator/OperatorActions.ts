@@ -1,25 +1,21 @@
-// arm / veto / retroMercy; queue consumed by SessionRunner.step() on the next tick. GDD 2.2.
+// hitUp / hitDown; queue consumed by SessionRunner.step() on the next tick. GDD 2.2.
 // The UI never touches the simulation directly: gestures become commands here,
 // the game loop drains them once per frame, so a session stays a function of
-// (seed, command script) and can be replayed from the log.
+// (seed, command script) and can be replayed from the log. The timing
+// judgement happens in the runner, from the frame the command is applied in.
 import type { OperatorCommand } from '../session/SessionRunner';
 
 export class OperatorActions {
   private pending: OperatorCommand[] = [];
 
-  /** Arm mercy for a chip (swipe up). GDD 2.2. */
-  arm(hazardId: string): void {
-    this.pending.push({ action: 'arm', hazardId });
+  /** Swipe up on the hit line: mercy (or retroactive mercy in the death freeze). GDD 2.2. */
+  hitUp(): void {
+    this.pending.push({ action: 'hitUp' });
   }
 
-  /** Veto: disarms an armed chip, otherwise hardens it (swipe down). GDD 2.2. */
-  veto(hazardId: string): void {
-    this.pending.push({ action: 'veto', hazardId });
-  }
-
-  /** Retroactive mercy during DEATH_FREEZE (swipe up in the freeze). GDD 2.2. */
-  retroMercy(): void {
-    this.pending.push({ action: 'retroMercy' });
+  /** Swipe down on the hit line: harden the front hazard. GDD 2.2. */
+  hitDown(): void {
+    this.pending.push({ action: 'hitDown' });
   }
 
   /** Commands for this frame; empties the queue. */

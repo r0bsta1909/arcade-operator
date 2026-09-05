@@ -63,16 +63,46 @@ export const SessionConfig = {
   /** Hazard lane shows chips this many frames ahead (GDD 2.2: 1-2 s). */
   laneLookaheadFrames: 120,
 
+  // ------------------------------------------------------------- timed hits
+  // GDD 2.2 (timed-hit model after STOPP 2): a swipe is judged against the front chip's critical frame.
+  hit: {
+    /** |offset| <= perfect => PERFECT: mercy is invisible (suspicion +3), hardening trims to a guaranteed near-miss. */
+    perfectMs: 50,
+    /** |offset| <= good => GOOD: mercy as GDD 2.4 by delta, hardening = 40 ms window. */
+    goodMs: 150,
+    /** Swipe up within this many ms after a death => LATE = retroactive mercy (equals the death freeze). */
+    lateMs: 400,
+  },
+  harden: {
+    /** A PERFECT hardening trims the guest's window so his committed jump keeps exactly this margin: below every profile's felt near-miss threshold (min(60 ms, sigma); veteran sigma = 30 ms), so it is felt but never kills. */
+    perfectMarginMs: 20,
+  },
+  /** GDD 2.6 combo / live operator score (after STOPP 2). */
+  combo: {
+    /** Multiplier = 1 + floor(combo / step), capped. */
+    step: 5,
+    maxMultiplier: 4,
+    points: { perfect: 100, good: 50, late: 20 },
+  },
+  /** Wall-clock tempo ramp via Clock.timeScale, +perSegment per cleared segment. Hit windows are in sim-ms, so they tighten in real time. */
+  tempo: { start: 1.0, perSegment: 0.1, max: 1.4 },
+
   // ------------------------------------------------------------------ heat
-  // GDD 2.1 / 2.2. Overheat pulled into M1 after STOPP 2 (Rob, 2026-09-05): without a cost, arming everything wins.
-  // Decay 8 -> 5 /s and lock 3 -> 5 s after the second device round: spamming mercy must lock the machine (merciful bot 42 % -> 35 % wins, oracle bot unchanged at 49 %).
-  heatArm: 20,
-  heatMercyApplied: 10,
-  heatHarden: 15,
-  heatRetroMercy: 35,
-  heatDecayPerSec: 5,
-  /** GDD 2.1: at 100 heat the machine locks for 3 s, no interventions. */
-  heatMax: 100,
+  // GDD 2.1 / 2.2. Overheat pulled into M1 after STOPP 2 (Rob, 2026-09-05): without a cost, helping everywhere wins.
+  // Decay 8 -> 5 /s and lock 3 -> 5 s after the second device round. Costs by judgement since the timed-hit model.
+  heat: {
+    perfect: 10,
+    goodMercy: 20,
+    goodHarden: 15,
+    late: 35,
+    /** A swing that hits nothing still heats the relays. */
+    miss: 10,
+    /** GDD 2.2: +10 when mercy actually applies. */
+    mercyApplied: 10,
+    decayPerSec: 5,
+    /** GDD 2.1: at max the machine locks for overheatLockMs, no interventions. */
+    max: 100,
+  },
   overheatLockMs: 5000,
 
   // ----------------------------------------------------------------- guest

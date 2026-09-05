@@ -9,13 +9,15 @@ import type { HazardView } from '../arcade/FakeArcadeGame';
 import type { ManipulationLayer } from '../arcade/ManipulationLayer';
 import { de } from '../i18n/de';
 import { SessionConfig as C } from '../session/SessionConfig';
-import type { OperatorEffect } from '../session/events';
+import type { GameEventOf } from '../session/events';
 
 const CHIP_GLYPH: Record<HazardView['type'], string> = { crater: '○', worm: '◆', probe: '▲', meteor: '●' };
 /** How long a resolved chip stays visible with its outcome. */
 const OUTCOME_MS = 1400;
 /** How long the action flash stays on the lane. */
-const FLASH_MS = 450;
+const FLASH_MS = 300;
+/** How long the judgement text stays at the line. */
+const JUDGE_MS = 550;
 
 export type ChipOutcome = keyof typeof de.lane.outcome;
 
@@ -34,6 +36,12 @@ export class HazardLane {
   private readonly freezeBar: HTMLElement;
   private readonly flash: HTMLElement;
   private readonly overheat: HTMLElement;
+  private readonly judge: HTMLElement;
+  private readonly judgeText: HTMLElement;
+  private readonly judgeEffect: HTMLElement;
+  private readonly scoreEl: HTMLElement;
+  private readonly comboEl: HTMLElement;
+  private judgeTimer = 0;
   private chips = new Map<string, HTMLElement>();
   private outcomes = new Map<string, { until: number }>();
   private ids: string[] = [];
@@ -46,6 +54,8 @@ export class HazardLane {
       <div class="lane-contact"><span>${de.lane.contact}</span></div>
       <div class="lane-track"></div>
       <div class="lane-hints"><span>${de.lane.hintUp}</span><span>${de.lane.hintDown}</span></div>
+      <div class="lane-hud"><span class="lane-score"></span><span class="lane-combo"></span></div>
+      <div class="lane-judge"><span class="judge-text"></span><span class="judge-effect"></span></div>
       <div class="lane-flash"></div>
       <div class="lane-overheat"></div>
       <div class="lane-freeze"><div class="lane-freeze-bar"></div><span>${de.lane.freeze}</span></div>`;
@@ -53,6 +63,11 @@ export class HazardLane {
     this.freezeBar = this.root.querySelector<HTMLElement>('.lane-freeze-bar')!;
     this.flash = this.root.querySelector<HTMLElement>('.lane-flash')!;
     this.overheat = this.root.querySelector<HTMLElement>('.lane-overheat')!;
+    this.judge = this.root.querySelector<HTMLElement>('.lane-judge')!;
+    this.judgeText = this.root.querySelector<HTMLElement>('.judge-text')!;
+    this.judgeEffect = this.root.querySelector<HTMLElement>('.judge-effect')!;
+    this.scoreEl = this.root.querySelector<HTMLElement>('.lane-score')!;
+    this.comboEl = this.root.querySelector<HTMLElement>('.lane-combo')!;
   }
 
   /** Hazard ids currently displayed, front chip first. Used by keyboard input. */
@@ -72,12 +87,24 @@ export class HazardLane {
     this.outcomes.set(hazardId, { until: performance.now() + OUTCOME_MS });
   }
 
-  /** An operator action was accepted: flash the lane with its effect. */
-  showEffect(effect: OperatorEffect): void {
-    this.flash.textContent = de.lane.effect[effect];
-    this.flash.className = `lane-flash show effect-${effect}`;
+  /** A hit was judged: big judgement at the line plus a lane flash in the judgement color. GDD 2.2. */
+  showJudgement(a: GameEventOf<'OperatorAction'>): void {
+    this.judgeText.textContent = de.lane.judgement[a.judgement];
+    this.judgeEffect.textContent = de.lane.effect[a.effect];
+    this.judge.className = `lane-judge show judge-${a.judgement}`;
+    this.flash.textContent = '';
+    this.flash.className = `lane-flash show judge-${a.judgement} dir-${a.action === 'hitUp' ? 'up' : 'down'}`;
+    window.clearTimeout(this.judgeTimer);
     window.clearTimeout(this.flashTimer);
+    this.judgeTimer = window.setTimeout(() => this.judge.classList.remove('show'), JUDGE_MS);
     this.flashTimer = window.setTimeout(() => this.flash.classList.remove('show'), FLASH_MS);
+  }
+
+  /** Live operator score and combo. GDD 2.6. */
+  showHud(score: number, combo: number, multiplier: number): void {
+    this.scoreEl.textContent = de.lane.opScore(score);
+    this.comboEl.textContent = combo > 0 ? `${de.lane.combo(combo)} ${de.lane.multiplier(multiplier)}` : '';
+    this.comboEl.classList.toggle('hot', multiplier >= 3);
   }
 
   update(hazards: readonly HazardView[], manip: ManipulationLayer, freeze: LaneFreeze | null, overheat: LaneOverheat | null = null, verdicts: ReadonlyMap<string, 'safe' | 'dead'> = new Map()): void {

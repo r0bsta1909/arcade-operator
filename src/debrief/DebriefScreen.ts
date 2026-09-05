@@ -47,6 +47,11 @@ export class DebriefScreen {
     }
     const hint =
       profileId === 'casual' || profileId === 'tilter' ? de.debrief.profileHint[profileId](deathsCount) : de.debrief.profileHint[profileId](longestStreak);
+    const actions = log.filter('OperatorAction').map((a) => a.e);
+    const judgeCounts = { perfect: 0, good: 0, late: 0, miss: 0 };
+    for (const a of actions) judgeCounts[a.judgement]++;
+    const maxCombo = Math.max(0, ...log.filter('Combo').map((c) => c.e.value));
+    const opScore = log.filter('OperatorScore').at(-1)?.e.value ?? 0;
     const inChannel = samples.length
       ? Math.round((100 * samples.filter((s) => s.e.frustration < C.channelFrustMax && s.e.boredom < C.channelBoredMax).length) / samples.length)
       : 0;
@@ -65,6 +70,7 @@ export class DebriefScreen {
       <p>${outcome}${result.cause === 'lives' ? ` ${de.debrief.livesGone}` : ''}</p>
       <p>${de.debrief.score(result.score)} · ${de.debrief.inChannel(inChannel)} · ${de.debrief.profile(PROFILES[profileId].label)}</p>
       <p>${hint}</p>
+      <p>${de.debrief.opScore(opScore)} · ${de.debrief.maxCombo(maxCombo)} · ${de.debrief.judgementLegend}: PERFECT ${judgeCounts.perfect} / GOOD ${judgeCounts.good} / LATE ${judgeCounts.late} / MISS ${judgeCounts.miss}</p>
       <svg class="debrief-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
         <rect x="${PAD}" y="${y(C.channelFrustMax).toFixed(1)}" width="${W - 2 * PAD}" height="${(y(0) - y(C.channelFrustMax)).toFixed(1)}" fill="rgba(61,220,132,0.12)"/>
         <line x1="${PAD}" y1="${y(C.channelFrustMax).toFixed(1)}" x2="${W - PAD}" y2="${y(C.channelFrustMax).toFixed(1)}" stroke="#3ddc84" stroke-dasharray="4 4"/>

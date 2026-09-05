@@ -14,15 +14,20 @@ export type GameState =
   | 'DEBRIEF';
 
 export type EndReason = 'VICTORY' | 'ABORT_FRUST' | 'ABORT_BORED' | 'ABORT_SUSPECT';
-/** What triggered the end: tolerance hit zero, guest ran out of lives, or high score. */
+/** What triggered the end: tolerance hit zero, guest ran out of lives, high score, or suspicion maxed. */
 export type EndCause = 'tolerance' | 'lives' | 'highscore' | 'suspicion';
 
 export type HazardType = 'crater' | 'worm' | 'probe' | 'meteor';
 
-/** Operator gestures that can be scripted, logged and replayed. GDD 2.2. */
-export type OperatorActionKind = 'arm' | 'veto' | 'retroMercy';
-/** What an accepted action did: veto either disarms an armed chip or hardens it. GDD 2.2. */
-export type OperatorEffect = 'armed' | 'disarmed' | 'hardened' | 'revived';
+/**
+ * Operator gestures (GDD 2.2, timed-hit model after STOPP 2): a swipe up or
+ * down on the hit line. What it does depends on the timing judgement.
+ */
+export type OperatorActionKind = 'hitUp' | 'hitDown';
+/** Timing quality of a hit relative to the front chip's critical frame. GDD 2.2. */
+export type Judgement = 'perfect' | 'good' | 'late' | 'miss';
+/** What an accepted hit did. */
+export type OperatorEffect = 'mercy' | 'mercyWasted' | 'harden' | 'revived' | 'none';
 
 export type GameEvent =
   // --- fake game (FakeArcadeGame) ---
@@ -34,11 +39,13 @@ export type GameEvent =
   | { type: 'ScoreMilestone'; score: number }
   | { type: 'Respawn'; hazardId: string; livesLeft: number }
   // --- manipulation (ManipulationLayer) ---
-  | { type: 'MercyApplied'; hazardId: string; deltaMs: number }
+  | { type: 'MercyApplied'; hazardId: string; deltaMs: number; judgement: 'perfect' | 'good' }
   | { type: 'MercyExpired'; hazardId: string }
   | { type: 'RetroMercy'; hazardId: string; msAfterDeath: number }
   // --- operator ---
-  | { type: 'OperatorAction'; action: OperatorActionKind; hazardId?: string; effect: OperatorEffect }
+  | { type: 'OperatorAction'; action: OperatorActionKind; hazardId?: string; offsetMs: number; judgement: Judgement; effect: OperatorEffect }
+  | { type: 'Combo'; value: number; multiplier: number }
+  | { type: 'OperatorScore'; value: number; gained: number }
   | { type: 'Heat'; value: number }
   | { type: 'Overheat'; lockMs: number }
   | { type: 'OverheatEnd' }

@@ -2,12 +2,18 @@
 // Used by the browser entry point, the tests, the balancing sim and replays.
 // Operator commands enter through `step(commands)` so a session is a pure
 // function of (seed, profile, command script).
+//
+// Timed-hit model (GDD 2.2 after STOPP 2): a hit is judged against the front
+// chip's critical frame (perfect / good / late / miss) and the judgement
+// decides the effect, the heat and the suspicion. Combo and operator score
+// live here too, because they are part of the deterministic log.
 import { EventBus } from '../core/EventBus';
 import { MS_PER_FRAME } from '../core/Clock';
 import { Rng } from '../core/Rng';
 import { FakeArcadeGame, type HazardView } from '../arcade/FakeArcadeGame';
 import { ManipulationLayer } from '../arcade/ManipulationLayer';
 import type { JumpPrediction } from '../arcade/OverlayRenderer';
+import { marginMs } from '../arcade/Physics';
 import { HumanAgent } from '../human/HumanAgent';
 import { HeatSystem } from '../operator/HeatSystem';
 import { HumanPsychologyEngine } from '../human/HumanPsychologyEngine';
@@ -15,7 +21,7 @@ import { ACTIVE_PROFILES, PROFILES, type ProfileId } from '../human/Profiles';
 import { CONTINUE_FRAMES, DEATH_FREEZE_FRAMES, GameStateManager, READY_FRAMES } from './GameStateManager';
 import { SessionConfig as C, configHash } from './SessionConfig';
 import { SessionLog } from './SessionLog';
-import type { EndCause, EndReason, OperatorActionKind } from './events';
+import type { EndCause, EndReason, Judgement, OperatorActionKind, OperatorEffect } from './events';
 
 export interface SessionSetup {
   seed: number;
@@ -26,7 +32,6 @@ export interface SessionSetup {
 
 export interface OperatorCommand {
   action: OperatorActionKind;
-  hazardId?: string;
 }
 
 export interface SessionResult {
@@ -35,6 +40,8 @@ export interface SessionResult {
   score: number;
   durationMs: number;
 }
+
+export type Verdict = 'safe' | 'dead';
 
 export class SessionRunner {
   readonly bus = new EventBus();
@@ -49,6 +56,10 @@ export class SessionRunner {
   /** Session frame counter (runs during freeze and continue as well). */
   frame = 0;
   result: SessionResult | null = null;
+  combo = 0;
+  maxCombo = 0;
+  operatorScore = 0;
+  segmentsCleared = 0;
   private deathFrame = 0;
 
   constructor(readonly setup: SessionSetup) {
@@ -70,11 +81,23 @@ export class SessionRunner {
     this.states = new GameStateManager(this.bus);
     this.heat = new HeatSystem(this.bus);
     this.bus.onAny((e) => this.psyche.apply(e, this.frame));
+    this.bus.on('SegmentCleared', () => this.segmentsCleared++);
+    // A death that is not undone breaks the combo (GDD 2.6 combo rule).
+    this.bus.on('Respawn', () => this.setCombo(0));
     this.states.transition('READY', 0);
   }
 
   get ended(): boolean {
     return this.result !== null;
+  }
+
+  get multiplier(): number {
+    return Math.min(C.combo.maxMultiplier, 1 + Math.floor(this.combo / C.combo.step));
+  }
+
+  /** Wall-clock tempo for the browser loop: 1.0 -> 1.4 over the session. GDD 2.2 tempo ramp. */
+  tempo(): number {
+    return Math.min(C.tempo.max, C.tempo.start + C.tempo.perSegment * this.segmentsCleared);
   }
 
   /** Advance one frame with the operator's commands for this frame. */
@@ -112,6 +135,7 @@ export class SessionRunner {
             this.game.respawn();
             st.transition('PLAY', this.frame);
           } else {
+            this.setCombo(0);
             st.transition('CONTINUE', this.frame);
           }
         }
@@ -160,7 +184,9 @@ export class SessionRunner {
     return this.log;
   }
 
-  /** Risk band for the overlay: first hazard within the lead time. GDD 2.2. */
+  // ---------------------------------------------------------- machine view
+
+  /** Overlay data for the front hazard: risk band, or the committed jump once the guest decided. GDD 2.2. */
   prediction(): JumpPrediction | null {
     if (this.states.state !== 'PLAY') return null;
     const next = this.game.getUpcomingHazards(1)[0];
@@ -172,6 +198,24 @@ export class SessionRunner {
     if (takeoff === null) return risk;
     const survives = this.game.willSurvive(next.id, takeoff);
     return survives === null ? risk : { ...risk, committed: { takeoffX: takeoff, survives } };
+  }
+
+  /** Per upcoming hazard: will the guest's committed jump survive under the current manipulation? Unknown = not committed. */
+  verdicts(): Map<string, Verdict> {
+    const out = new Map<string, Verdict>();
+    if (this.states.state !== 'PLAY') return out;
+    for (const h of this.game.getUpcomingHazards(3)) {
+      const v = this.verdictFor(h);
+      if (v) out.set(h.id, v);
+    }
+    return out;
+  }
+
+  private verdictFor(h: HazardView): Verdict | null {
+    const takeoff = this.committedTakeoff(h);
+    if (takeoff === null) return null;
+    const s = this.game.willSurvive(h.id, takeoff);
+    return s === null ? null : s ? 'safe' : 'dead';
   }
 
   /**
@@ -187,43 +231,95 @@ export class SessionRunner {
     return Math.max(planned, this.game.earliestTakeoffX());
   }
 
-  /** Per upcoming hazard: will the guest's committed jump survive under the current manipulation? Unknown = not committed. */
-  verdicts(): Map<string, 'safe' | 'dead'> {
-    const out = new Map<string, 'safe' | 'dead'>();
-    if (this.states.state !== 'PLAY') return out;
-    for (const h of this.game.getUpcomingHazards(3)) {
-      const planned = this.committedTakeoff(h);
-      if (planned === null) continue;
-      const s = this.game.willSurvive(h.id, planned);
-      if (s !== null) out.set(h.id, s ? 'safe' : 'dead');
-    }
-    return out;
-  }
-
   /** Milliseconds since the current death freeze started (for the lane countdown / latency). */
   msSinceDeath(): number {
     return (this.frame - this.deathFrame) * MS_PER_FRAME;
   }
 
+  // ------------------------------------------------------------- hits
+
+  /** Timing judgement for a hit `offsetMs` after (negative = before) the critical frame. GDD 2.2. */
+  static judge(offsetMs: number): Exclude<Judgement, 'late'> {
+    const a = Math.abs(offsetMs);
+    if (a <= C.hit.perfectMs) return 'perfect';
+    if (a <= C.hit.goodMs) return 'good';
+    return 'miss';
+  }
+
   private applyCommand(cmd: OperatorCommand): void {
     const st = this.states;
     if (this.heat.locked) return; // GDD 2.1: overheat = no interventions
-    if (cmd.action === 'retroMercy') {
-      if (!st.inDeathFreeze) return;
-      this.bus.emit({ type: 'OperatorAction', action: 'retroMercy', effect: 'revived' });
-      this.game.revive(this.msSinceDeath());
-      st.transition('PLAY', this.frame);
+
+    if (st.inDeathFreeze) {
+      const dead = this.game.deathHazard;
+      const ms = this.msSinceDeath();
+      if (cmd.action === 'hitUp' && dead && ms <= C.hit.lateMs) {
+        this.emitAction(cmd.action, dead.id, ms, 'late', 'revived');
+        this.game.revive(ms);
+        st.transition('PLAY', this.frame);
+        this.reward('late', true);
+      } else {
+        this.emitAction(cmd.action, dead?.id, ms, 'miss', 'none');
+        this.setCombo(0);
+      }
       return;
     }
-    if (st.state !== 'PLAY' || !cmd.hazardId) return;
-    if (!this.game.getUpcomingHazards(3).some((h) => h.id === cmd.hazardId)) return;
-    if (cmd.action === 'arm') {
-      this.manip.arm(cmd.hazardId);
-      this.bus.emit({ type: 'OperatorAction', action: 'arm', hazardId: cmd.hazardId, effect: 'armed' });
-    } else {
-      const effect = this.manip.veto(cmd.hazardId);
-      this.bus.emit({ type: 'OperatorAction', action: 'veto', hazardId: cmd.hazardId, effect });
+    if (st.state !== 'PLAY') return;
+
+    const front = this.game.getUpcomingHazards(1)[0];
+    if (!front) return;
+    const offsetMs = round1((this.game.frame - front.idealJumpFrame) * MS_PER_FRAME);
+    const judgement = SessionRunner.judge(offsetMs);
+    if (judgement === 'miss') {
+      this.emitAction(cmd.action, front.id, offsetMs, 'miss', 'none');
+      this.setCombo(0);
+      return;
     }
+
+    const verdict = this.verdictFor(front);
+    if (cmd.action === 'hitUp') {
+      this.manip.grantMercy(front.id, judgement);
+      const needed = verdict !== 'safe';
+      this.emitAction('hitUp', front.id, offsetMs, judgement, needed ? 'mercy' : 'mercyWasted');
+      this.reward(judgement, needed);
+      return;
+    }
+
+    // hitDown: harden. A perfect hit trims the window to exactly the guest's margin => guaranteed near-miss.
+    const needed = this.psyche.state.boredom > this.psyche.state.channel.boreMax / 2;
+    if (judgement === 'perfect') {
+      const takeoff = this.committedTakeoff(front);
+      if (takeoff !== null && verdict === 'safe') {
+        const margin = marginMs(takeoff, front.baseRange, this.game.speed);
+        const newWindow = margin > C.harden.perfectMarginMs ? C.windowMs - 2 * (margin - C.harden.perfectMarginMs) : C.windowMs;
+        this.manip.setWindow(front.id, round1(newWindow));
+      } else {
+        this.manip.setWindow(front.id, C.hardenedWindowMs);
+      }
+    } else {
+      this.manip.setWindow(front.id, C.hardenedWindowMs);
+    }
+    this.emitAction('hitDown', front.id, offsetMs, judgement, 'harden');
+    this.reward(judgement, needed);
+  }
+
+  private emitAction(action: OperatorActionKind, hazardId: string | undefined, offsetMs: number, judgement: Judgement, effect: OperatorEffect): void {
+    this.bus.emit(hazardId === undefined ? { type: 'OperatorAction', action, offsetMs, judgement, effect } : { type: 'OperatorAction', action, hazardId, offsetMs, judgement, effect });
+  }
+
+  /** Combo and score after an accepted hit. Only a *needed* perfect/good hit grows the combo. GDD 2.6. */
+  private reward(judgement: Exclude<Judgement, 'miss'>, needed: boolean): void {
+    if (needed && judgement !== 'late') this.setCombo(this.combo + 1);
+    const gained = C.combo.points[judgement] * this.multiplier;
+    this.operatorScore += gained;
+    this.bus.emit({ type: 'OperatorScore', value: this.operatorScore, gained });
+  }
+
+  private setCombo(value: number): void {
+    if (value === this.combo) return;
+    this.combo = value;
+    this.maxCombo = Math.max(this.maxCombo, value);
+    this.bus.emit({ type: 'Combo', value, multiplier: this.multiplier });
   }
 
   private end(reason: EndReason, cause: EndCause): void {
@@ -234,4 +330,8 @@ export class SessionRunner {
 
 function round3(n: number): number {
   return Math.round(n * 1000) / 1000;
+}
+
+function round1(n: number): number {
+  return Math.round(n * 10) / 10;
 }

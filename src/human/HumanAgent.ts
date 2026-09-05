@@ -56,21 +56,23 @@ export class HumanAgent {
 
   tick(world: GuestWorld, feel: GuestFeel): HumanInput | null {
     this.forgetStale(world.hazards);
-    const next = world.hazards[0];
-    if (!next) return null;
-
-    let plan = this.plans.get(next.id);
-    if (plan && Math.abs(plan.idealJumpFrame - next.idealJumpFrame) > 2) plan = undefined; // hazard re-activated after respawn
-    if (!plan && next.framesUntilCritical <= C.guestReactionFrames) {
+    // Commit a jump plan for every hazard inside the reaction horizon (in
+    // order, so the PRNG draw sequence is stable), execute only the front one.
+    for (const h of world.hazards) {
+      const existing = this.plans.get(h.id);
+      if (existing && Math.abs(existing.idealJumpFrame - h.idealJumpFrame) <= 2) continue;
+      if (h.framesUntilCritical > C.guestReactionFrames) break;
       const errorMs = this.rng.gaussian(C.biasMs, this.sigmaMs(feel));
-      plan = {
-        idealJumpFrame: next.idealJumpFrame,
-        jumpFrame: Math.round(next.idealJumpFrame + errorMs / MS_PER_FRAME),
+      this.plans.set(h.id, {
+        idealJumpFrame: h.idealJumpFrame,
+        jumpFrame: Math.round(h.idealJumpFrame + errorMs / MS_PER_FRAME),
         errorMs,
         executed: false,
-      };
-      this.plans.set(next.id, plan);
+      });
     }
+    const next = world.hazards[0];
+    if (!next) return null;
+    const plan = this.plans.get(next.id);
     if (!plan || plan.executed || world.frame < plan.jumpFrame) return null;
     // Press the button. If the hopper is still airborne the press is lost and
     // the guest keeps pressing until grounded (a human would hammer the button).

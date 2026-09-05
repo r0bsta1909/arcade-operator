@@ -9,15 +9,21 @@ export const de = {
     chip: { crater: 'Krater', worm: 'Wurm', probe: 'Sonde', meteor: 'Meteorit' },
     /** Shown on a chip once its hazard is resolved. */
     outcome: { alone: 'ALLEIN GESCHAFFT', mercy: 'GNADE GRIFF', expired: 'GNADE VERFALLEN', dead: 'TOT', retro: 'ZURÜCKGEHOLT' },
-    /** Flashed over the lane when an operator action is accepted. */
-    effect: { armed: 'GNADE GESCHARFT', disarmed: 'GNADE AUFGEHOBEN', hardened: 'VERHÄRTET', revived: 'TOD ZURÜCKGENOMMEN' },
+    /** Timing judgement flashed at the hit line. GDD 2.2. */
+    judgement: { perfect: 'PERFECT', good: 'GOOD', late: 'LATE', miss: 'MISS' },
+    /** What the accepted hit did, shown under the judgement. */
+    effect: { mercy: 'GNADE', mercyWasted: 'GNADE (UNNÖTIG)', harden: 'HÄRTE', revived: 'ZURÜCKGEHOLT', none: '' },
+    combo: (n: number) => `${n}×`,
+    opScore: (n: number) => `OP ${String(n).padStart(5, '0')}`,
+    multiplier: (m: number) => `×${m}`,
   },
   intro: {
     title: 'DU BIST DER AUTOMAT',
     lines: [
       'Der Gast spielt selbst und macht Fehler. Jeder Chip auf der Lane ist ein Hindernis, das gleich kommt.',
-      'Ein rot pulsierender Chip heißt: Der Gast wird an diesem Hindernis sterben. Wisch auf dem Chip nach oben, bevor er die rote Zone erreicht, dann fängt die Maschine ihn heimlich auf und der Punkt wird grün.',
-      'Stirbt er doch, pulsiert die Lane 400 ms rot. Wisch nach oben nimmt den Tod zurück. Wisch nach unten macht es schwerer, falls er sich langweilt.',
+      'Ein rot pulsierender Chip heißt: Der Gast wird an diesem Hindernis sterben. Wisch nach oben, genau wenn der Chip die Linie kreuzt: PERFECT rettet unsichtbar, GOOD rettet auffällig, daneben ist MISS.',
+      'Stirbt er doch, pulsiert die Lane 400 ms rot. Wisch nach oben holt ihn zurück (LATE). Langweilt er sich, wisch auf der Linie nach unten: Ein PERFECT-Hit macht den Sprung knapp, ohne ihn zu töten.',
+      'Nötige Hits in Folge bauen die Combo auf, bis ×4. MISS oder ein nicht zurückgenommener Tod bricht sie. Das Tempo zieht mit jedem Segment an.',
       'Jeder Eingriff heizt die Maschine auf. Bei 100 % Hitze ist sie 3 Sekunden blockiert.',
       'Greift Gnade bei einem klar verpassten Sprung, merkt der Gast es: Verdacht steigt und sinkt nie ganz zurück. Bei 100 geht er.',
     ],
@@ -55,6 +61,9 @@ export const de = {
     inChannel: (pct: number) => `${pct} % der Zeit im Kanal`,
     profile: (label: string) => `Profil: ${label}`,
     /** GDD 2.6: one sentence per profile that explains what the guest needed. */
+    judgementLegend: 'Hits',
+    maxCombo: (n: number) => `Combo max ${n}`,
+    opScore: (n: number) => `Operator-Score ${n}`,
     profileHint: {
       casual: (deaths: number) => `Der Casual verzeiht keine Serientode — ${deaths} in einer Runde.`,
       veteran: (streak: number) => `Der Veteran langweilt sich bei Streaks über ${3 - 1} — du hast ihm ${streak} gegeben.`,

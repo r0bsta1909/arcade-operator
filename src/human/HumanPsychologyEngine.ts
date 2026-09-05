@@ -99,7 +99,8 @@ export class HumanPsychologyEngine {
       case 'MercyApplied': {
         const s = C.suspicion;
         const d = Math.abs(event.deltaMs);
-        const inc = d > s.mercyHighDeltaMs ? s.mercyHigh : d > s.mercyMidDeltaMs ? s.mercyMid : s.mercyLow;
+        // GDD 2.2 timed hits: a PERFECT hit is invisible to the guest; GOOD is judged by his timing delta (GDD 2.4).
+        const inc = event.judgement === 'perfect' ? s.mercyLow : d > s.mercyHighDeltaMs ? s.mercyHigh : d > s.mercyMidDeltaMs ? s.mercyMid : s.mercyLow;
         this.suspect(inc, 'mercy');
         this.doubleMercy(frame);
         break;

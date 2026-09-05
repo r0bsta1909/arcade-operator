@@ -1,23 +1,20 @@
-// Pointer + keyboard gestures on lane and sliders. GDD 2.2, 5.3.
-// Swipe: >= 40 px, <= 250 ms, vertically dominant. Tap: <= 200 ms (M2 hitbox
-// shrink; ignored in M1). Pointer capture on the lane. Keyboard: W/S or
-// arrows act on the front chip, 1-3 select a chip, W in the freeze = retro mercy.
+// Pointer + keyboard gestures on the lane. GDD 2.2, 5.3 (timed-hit model).
+// A swipe anywhere on the lane is a hit on the line: up = mercy, down = harden.
+// The timing judgement happens in the simulation from the frame the command
+// is applied in. Swipe: >= 28 px, <= 450 ms, vertically dominant (loosened
+// after the first device test; GDD said 40 px / 250 ms). Keyboard: W/S or arrows.
 import type { OperatorActions } from './OperatorActions';
 import type { LatencyProbe } from './LatencyProbe';
 
 export interface InputContext {
-  /** Hazard ids currently shown on the lane, front chip first. */
-  chipIds(): readonly string[];
   inDeathFreeze(): boolean;
 }
 
-// GDD 5.3 said >= 40 px in <= 250 ms; loosened after the first device test (STOPP 2: swipes not detected).
 const SWIPE_MIN_PX = 28;
 const SWIPE_MAX_MS = 450;
 
 export class OperatorInput {
-  private start: { x: number; y: number; t: number; chipId: string | null; pointerId: number } | null = null;
-  private selectedIndex = 0;
+  private start: { x: number; y: number; t: number; pointerId: number } | null = null;
   private readonly disposers: Array<() => void> = [];
 
   constructor(
@@ -36,15 +33,14 @@ export class OperatorInput {
     for (const d of this.disposers) d();
   }
 
-  private listen<K extends keyof HTMLElementEventMap>(el: HTMLElement | Window, type: K | string, fn: (e: never) => void): void {
+  private listen(el: HTMLElement | Window, type: string, fn: (e: never) => void): void {
     el.addEventListener(type, fn as EventListener);
     this.disposers.push(() => el.removeEventListener(type, fn as EventListener));
   }
 
   private readonly onDown = (e: PointerEvent): void => {
-    const chip = (e.target as HTMLElement).closest<HTMLElement>('[data-hazard-id]');
     this.lane.setPointerCapture(e.pointerId);
-    this.start = { x: e.clientX, y: e.clientY, t: e.timeStamp, chipId: chip?.dataset['hazardId'] ?? null, pointerId: e.pointerId };
+    this.start = { x: e.clientX, y: e.clientY, t: e.timeStamp, pointerId: e.pointerId };
   };
 
   private readonly onUp = (e: PointerEvent): void => {
@@ -57,50 +53,36 @@ export class OperatorInput {
     const dt = e.timeStamp - s.t;
     const isSwipe = Math.abs(dy) >= SWIPE_MIN_PX && dt <= SWIPE_MAX_MS && Math.abs(dy) > Math.abs(dx);
     if (!isSwipe) return;
-    if (dy < 0) this.up(s.chipId);
-    else this.down(s.chipId);
+    if (dy < 0) this.up();
+    else this.down();
   };
 
   private readonly onKey = (e: KeyboardEvent): void => {
     if (e.repeat) return;
-    const chips = this.ctx.chipIds();
     switch (e.key) {
-      case '1':
-      case '2':
-      case '3':
-        this.selectedIndex = Number(e.key) - 1;
-        return;
       case 'w':
       case 'W':
       case 'ArrowUp':
         e.preventDefault();
-        this.up(chips[this.selectedIndex] ?? chips[0] ?? null);
+        this.up();
         return;
       case 's':
       case 'S':
       case 'ArrowDown':
         e.preventDefault();
-        this.down(chips[this.selectedIndex] ?? chips[0] ?? null);
+        this.down();
         return;
       default:
         return;
     }
   };
 
-  /** Swipe up: retro mercy in the freeze, otherwise arm the chip (or the front chip). */
-  private up(chipId: string | null): void {
-    if (this.ctx.inDeathFreeze()) {
-      this.actions.retroMercy();
-      this.probe.retroGestureEnded();
-      return;
-    }
-    const id = chipId ?? this.ctx.chipIds()[0];
-    if (id) this.actions.arm(id);
+  private up(): void {
+    if (this.ctx.inDeathFreeze()) this.probe.retroGestureEnded();
+    this.actions.hitUp();
   }
 
-  private down(chipId: string | null): void {
-    if (this.ctx.inDeathFreeze()) return;
-    const id = chipId ?? this.ctx.chipIds()[0];
-    if (id) this.actions.veto(id);
+  private down(): void {
+    this.actions.hitDown();
   }
 }

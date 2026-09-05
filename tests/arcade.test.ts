@@ -50,10 +50,9 @@ describe('physics / segments', () => {
     const manip = new ManipulationLayer(bus);
     const o: Obstacle = { id: 'h', type: 'crater', x: 400, width: 36, height: 0, segment: 0, loop: 0, resolved: false };
     const plain = takeoffRange(o, manip.slackFor('h'), 1)!;
-    manip.arm('h');
+    manip.grantMercy('h', 'perfect');
     const merciful = takeoffRange(o, manip.slackFor('h'), 1)!;
-    manip.veto('h'); // disarms
-    manip.veto('h'); // hardens
+    manip.setWindow('h', C.hardenedWindowMs);
     const hard = takeoffRange(o, manip.slackFor('h'), 1)!;
     expect(merciful.widthMs).toBeGreaterThan(plain.widthMs + 100);
     expect(hard.widthMs).toBeLessThan(plain.widthMs);
@@ -159,15 +158,15 @@ describe('machine view tells the truth (STOPP 2)', () => {
     expect(checked).toBeGreaterThan(100);
   });
 
-  it('arming a doomed chip turns its verdict green', () => {
+  it('a good hit up on a doomed chip turns its verdict green', () => {
     for (let seed = 1; seed < 40; seed++) {
       const r = new SessionRunner({ seed, profileId: 'casual', buildHash: 'test' });
       let found = false;
       while (!r.ended && !found) {
         r.step();
         const next = r.game.getUpcomingHazards(1)[0];
-        if (next && r.verdicts().get(next.id) === 'dead' && next.framesUntilCritical > 10) {
-          r.step([{ action: 'arm', hazardId: next.id }]);
+        if (r.states.state === 'PLAY' && next && r.verdicts().get(next.id) === 'dead' && next.framesUntilCritical <= 6 && next.framesUntilCritical > 5) {
+          r.step([{ action: 'hitUp' }]);
           const after = r.verdicts().get(next.id);
           if (after === 'safe') found = true;
           else break; // mercy could not save this one (too far off), try another seed

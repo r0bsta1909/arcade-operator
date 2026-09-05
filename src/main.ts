@@ -70,18 +70,19 @@ function crtMessage(): string | undefined {
 const loop = new GameLoop({
   onTick: () => {
     if (!runner.ended) runner.step(actions.drain());
+    loop.clock.timeScale = runner.tempo(); // GDD 2.2 tempo ramp
   },
   onRender: () => {
     const snap = runner.game.snapshot();
     const frozen = runner.states.inDeathFreeze;
     const freezeProgress = frozen ? runner.states.framesIn(runner.frame) / DEATH_FREEZE_FRAMES : undefined;
     const marks = new Map<string, 'armed' | 'hardened'>();
-    for (const id of runner.manip.state.armed) marks.set(id, 'armed');
-    for (const id of runner.manip.state.hardened) marks.set(id, 'hardened');
+    for (const id of runner.manip.state.mercy.keys()) marks.set(id, 'armed');
+    for (const id of runner.manip.state.windowOverride.keys()) marks.set(id, 'hardened');
     const upcoming = runner.game.getUpcomingHazards(3);
     crt.render(snap, { freezeProgress, message: crtMessage(), marks, nextHazardId: upcoming[0]?.id });
     overlay.render(snap, runner.prediction());
-    dashboard.update(upcoming, runner.manip, frozen && freezeProgress !== undefined ? { progress: freezeProgress } : null, runner.psyche.state, runner.heat.value, runner.heat.locked ? { msLeft: runner.heat.lockMsLeft } : null, runner.verdicts());
+    dashboard.update(upcoming, runner.manip, frozen && freezeProgress !== undefined ? { progress: freezeProgress } : null, runner.psyche.state, runner.heat.value, runner.heat.locked ? { msLeft: runner.heat.lockMsLeft } : null, runner.verdicts(), { score: runner.operatorScore, combo: runner.combo, multiplier: runner.multiplier });
 
     if (runner.ended && runner.result && ++endScreenFrames >= END_SCREEN_FRAMES) {
       // Hold the end screen for a moment, then debrief.
@@ -102,10 +103,10 @@ function startSession(): void {
   probe = new LatencyProbe(runner.bus);
   wireLaneFeedback();
   input = new OperatorInput(dashboard.lane.root, actions, probe, {
-    chipIds: () => dashboard.lane.chipIds(),
     inDeathFreeze: () => runner.states.inDeathFreeze,
   });
   fitCanvases();
+  loop.clock.timeScale = 1;
   if (introSeen()) loop.start();
   else showIntro();
 }
@@ -119,7 +120,7 @@ function wireLaneFeedback(): void {
   bus.on('HazardCleared', (e) => lane.showOutcome(e.hazardId, 'alone'));
   bus.on('Death', (e) => lane.showOutcome(e.hazardId, 'dead'));
   bus.on('RetroMercy', (e) => lane.showOutcome(e.hazardId, 'retro'));
-  bus.on('OperatorAction', (e) => lane.showEffect(e.effect));
+  bus.on('OperatorAction', (e) => lane.showJudgement(e));
 }
 
 const INTRO_KEY = 'operator.introSeen';

@@ -69,8 +69,9 @@ export class Dashboard {
     this.introStart = this.q('button.intro-start');
   }
 
-  update(hazards: readonly HazardView[], manip: ManipulationLayer, freeze: LaneFreeze | null, psyche: PsycheState, heat: number, overheat: LaneOverheat | null, verdicts: ReadonlyMap<string, 'safe' | 'dead'>): void {
+  update(hazards: readonly HazardView[], manip: ManipulationLayer, freeze: LaneFreeze | null, psyche: PsycheState, heat: number, overheat: LaneOverheat | null, verdicts: ReadonlyMap<string, 'safe' | 'dead'>, hud: { score: number; combo: number; multiplier: number }): void {
     this.lane.update(hazards, manip, freeze, overheat, verdicts);
+    this.lane.showHud(hud.score, hud.combo, hud.multiplier);
     this.heatFill.classList.toggle('locked', overheat !== null);
     this.heatFill.classList.toggle('hot', overheat === null && heat >= 70);
     this.meters.update(psyche);
